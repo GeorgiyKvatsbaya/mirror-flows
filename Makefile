@@ -1,7 +1,7 @@
 # World Trade Atlas — pipeline entry points. dbt always runs from dbt/ with the in-repo profile.
 DBT = cd dbt && uv run dbt
 
-.PHONY: setup ingest build test export docs refresh-baci refresh-imf web check
+.PHONY: setup ingest build test export docs baci-check refresh-baci refresh-imf web
 
 setup:            ## Python deps, dbt packages, web deps
 	uv sync --extra dev
@@ -31,6 +31,9 @@ docs:             ## Static dbt docs -> web/public/dbt (local paths stripped)
 	uv run python -c "import pathlib,sys; root=str(pathlib.Path('dbt').resolve()); \
 	  s=pathlib.Path('dbt/target/static_index.html').read_text(); \
 	  pathlib.Path('web/public/dbt/index.html').write_text(s.replace(root, 'dbt'))"
+
+baci-check:       ## Is a newer BACI release out? (CEPII blocks GitHub runners, so run locally)
+	uv run wta baci-version
 
 refresh-baci:     ## Annual: new BACI release -> full rebuild of the fact table
 	uv run wta ingest baci

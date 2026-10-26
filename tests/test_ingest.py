@@ -33,7 +33,12 @@ def test_latest_version_picks_newest_hs92_release():
 
 @pytest.mark.parametrize(
     ("raw", "fixed"),
-    [("TÃ¼rkiye", "Türkiye"), ("CuraÃ§ao", "Curaçao"), ("Côte d'Ivoire", "Côte d'Ivoire"), (None, None)],
+    [
+        ("TÃ¼rkiye", "Türkiye"),
+        ("CuraÃ§ao", "Curaçao"),
+        ("Côte d'Ivoire", "Côte d'Ivoire"),
+        (None, None),
+    ],
 )
 def test_repair_mojibake(raw, fixed):
     assert baci.repair_mojibake(raw) == fixed
@@ -43,7 +48,9 @@ def test_convert_year_types_and_pads_codes(tmp_path, monkeypatch):
     monkeypatch.setattr(baci, "BACI_DIR", tmp_path)
     rows = baci.convert_year(duckdb.connect(), SAMPLES / "baci_2024.csv", 2024)
     assert rows == 3
-    out = duckdb.sql(f"SELECT k, v, q FROM '{tmp_path}/year=2024/flows.parquet' ORDER BY k").fetchall()
+    out = duckdb.sql(
+        f"SELECT k, v, q FROM '{tmp_path}/year=2024/flows.parquet' ORDER BY k"
+    ).fetchall()
     # HS6 keeps its leading zero; "NA" and blank quantities become NULL.
     assert out == [("010121", 1234.5, None), ("080810", 0.176, 0.1), ("870323", 99.9, None)]
 
@@ -64,10 +71,15 @@ def test_imf_empty_response_is_no_data():
 
 def test_export_table_is_columnar_and_months_are_short():
     con = duckdb.connect()
-    result = export.table(con, "SELECT DATE '2026-06-01' AS month, 1.5 AS v UNION ALL SELECT DATE '2026-07-01', NULL")
+    result = export.table(
+        con, "SELECT DATE '2026-06-01' AS month, 1.5 AS v UNION ALL SELECT DATE '2026-07-01', NULL"
+    )
     assert result == {"columns": ["month", "v"], "rows": [["2026-06", 1.5], ["2026-07", None]]}
 
 
 def test_money_and_share_sql():
     assert export.money("exports_usd") == "round(exports_usd / 1000000.0, 2) AS exports"
-    assert export.share("t.world_market_share") == "round(t.world_market_share, 4) AS world_market_share"
+    assert (
+        export.share("t.world_market_share")
+        == "round(t.world_market_share, 4) AS world_market_share"
+    )

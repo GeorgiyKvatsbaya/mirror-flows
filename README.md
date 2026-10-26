@@ -63,8 +63,9 @@ The dbt profile lives in `dbt/profiles.yml` (run dbt from `dbt/`); paths can be 
 - **IMF months** — `.github/workflows/refresh-imf.yml` runs monthly: ingests IMF, builds only
   `+tag:monthly` (no BACI needed: the small dimension tables are committed in `data/reference/`),
   rewrites the monthly series in the country files and commits; Vercel redeploys.
-- **BACI** — released once a year. `.github/workflows/baci-watch.yml` opens an issue when CEPII
-  publishes a new version; rebuild locally with `make refresh-baci` (full refresh of the fact table).
+- **BACI** — released once a year (late January). CEPII's site refuses requests from GitHub's
+  runners, so the check runs locally: `make baci-check` prints the latest and the ingested
+  version; rebuild with `make refresh-baci` (full refresh of the fact table).
 - **CI** — `.github/workflows/ci.yml`: ruff, pytest, `dbt build --target ci` on a 5,000-row real
   slice in `tests/fixtures/raw` (regenerate with `scripts/make_ci_fixtures.py`), sqlfluff, web
   tests and build.
