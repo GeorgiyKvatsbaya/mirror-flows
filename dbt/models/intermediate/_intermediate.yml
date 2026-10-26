@@ -1,0 +1,52 @@
+version: 2
+
+models:
+  - name: int_country_entities
+    description: >
+      Maps every BACI country code to a stable country entity, with ISO2 for display names,
+      the map feature to colour, and World Bank region and income group. See
+      `seeds/country_overrides.csv` for the exceptions.
+    columns:
+      - name: baci_code
+        data_tests: [unique, not_null]
+      - name: entity_code
+        description: "{{ doc('entity_code') }}"
+        data_tests: [unique, not_null]
+
+  - name: int_exports_hs4_yearly
+    description: Exports by country x HS4 heading x year, summed over all partners.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments: {combination_of_columns: [year, entity_code, hs4]}
+
+  - name: int_imports_hs4_yearly
+    description: Imports by country x HS4 heading x year, summed over all partners.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments: {combination_of_columns: [year, entity_code, hs4]}
+
+  - name: int_pair_yearly
+    description: Total trade from exporter to importer per year.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments: {combination_of_columns: [year, exporter_code, importer_code]}
+
+  - name: int_pair_hs2_yearly
+    description: Exporter-to-importer trade by HS2 chapter per year.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments: {combination_of_columns: [year, exporter_code, importer_code, hs2]}
+
+  - name: int_world_hs4_yearly
+    description: World exports per HS4 heading and in total per year — RCA denominators.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments: {combination_of_columns: [year, hs4]}
+
+  - name: int_imf_pair_monthly
+    description: >
+      IMF monthly flows pivoted to reporter x partner x month (exports and imports side by side),
+      partner codes resolved to country entities; 'WLD' is the total with the world.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments: {combination_of_columns: [reporter_code, partner_code, month]}

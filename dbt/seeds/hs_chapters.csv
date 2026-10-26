@@ -1,0 +1,98 @@
+chapter,name_en,name_ru
+01,Live animals,Живые животные
+02,Meat,Мясо
+03,Fish & seafood,Рыба и морепродукты
+04,"Dairy, eggs & honey","Молочные продукты, яйца и мёд"
+05,Other animal products,Прочие продукты животного происхождения
+06,Plants & flowers,Растения и цветы
+07,Vegetables,Овощи
+08,Fruit & nuts,Фрукты и орехи
+09,"Coffee, tea & spices","Кофе, чай и пряности"
+10,Cereals,Зерновые
+11,Milling products & starch,Продукция мукомольной промышленности
+12,Oil seeds,Масличные семена
+13,Gums & resins,Камеди и смолы
+14,Other vegetable products,Прочие растительные продукты
+15,Fats & oils,Жиры и масла
+16,Meat & fish preparations,Изделия из мяса и рыбы
+17,Sugar & confectionery,Сахар и кондитерские изделия
+18,Cocoa & chocolate,Какао и шоколад
+19,Bakery & cereal preparations,Хлебобулочные изделия и крупы
+20,Vegetable & fruit preparations,Консервы из овощей и фруктов
+21,Miscellaneous food preparations,Прочие пищевые продукты
+22,Beverages & spirits,Напитки и спирт
+23,Food waste & animal feed,Отходы пищевой промышленности и корма
+24,Tobacco,Табак
+25,"Salt, stone & cement","Соль, камень и цемент"
+26,Ores,Руды
+27,Mineral fuels & oil,Минеральное топливо и нефть
+28,Inorganic chemicals,Неорганические химикаты
+29,Organic chemicals,Органические химикаты
+30,Pharmaceuticals,Фармацевтика
+31,Fertilisers,Удобрения
+32,Dyes & paints,Красители и краски
+33,"Perfumes, cosmetics & essential oils","Парфюмерия, косметика и эфирные масла"
+34,Soap & detergents,Мыло и моющие средства
+35,Glues & enzymes,Клеи и ферменты
+36,Explosives & matches,Взрывчатые вещества и спички
+37,Photographic goods,Фото- и кинотовары
+38,Miscellaneous chemicals,Прочая химическая продукция
+39,Plastics,Пластмассы
+40,Rubber,Каучук и резина
+41,Raw hides & leather,Шкуры и кожа
+42,Leather goods & bags,Изделия из кожи и сумки
+43,Fur,Мех
+44,Wood,Древесина
+45,Cork,Пробка
+46,Basketwork,Плетёные изделия
+47,Wood pulp,Целлюлоза
+48,Paper & paperboard,Бумага и картон
+49,Printed matter,Печатная продукция
+50,Silk,Шёлк
+51,Wool,Шерсть
+52,Cotton,Хлопок
+53,Other vegetable fibres,Прочие растительные волокна
+54,Man-made filaments,Химические нити
+55,Man-made staple fibres,Химические штапельные волокна
+56,Wadding & cordage,Вата и верёвки
+57,Carpets,Ковры
+58,Special fabrics & lace,Специальные ткани и кружево
+59,Coated textiles,Ткани с покрытием
+60,Knitted fabrics,Трикотажные полотна
+61,"Clothing, knitted","Одежда трикотажная"
+62,"Clothing, not knitted","Одежда нетрикотажная"
+63,Other textile articles,Прочие текстильные изделия
+64,Footwear,Обувь
+65,Headgear,Головные уборы
+66,Umbrellas & walking sticks,Зонты и трости
+67,Feathers & artificial flowers,Перья и искусственные цветы
+68,Stone & cement articles,Изделия из камня и цемента
+69,Ceramics,Керамика
+70,Glass,Стекло
+71,"Precious stones, metals & jewellery","Драгоценные камни, металлы и украшения"
+72,Iron & steel,Чёрные металлы
+73,Iron & steel articles,Изделия из чёрных металлов
+74,Copper,Медь
+75,Nickel,Никель
+76,Aluminium,Алюминий
+78,Lead,Свинец
+79,Zinc,Цинк
+80,Tin,Олово
+81,Other base metals,Прочие недрагоценные металлы
+82,Tools & cutlery,Инструменты и столовые приборы
+83,Miscellaneous metal articles,Прочие изделия из металлов
+84,Machinery & computers,Машины и компьютеры
+85,Electrical equipment & electronics,Электрооборудование и электроника
+86,Railway equipment,Железнодорожный транспорт
+87,Vehicles & parts,Автомобили и запчасти
+88,Aircraft & spacecraft,Летательные аппараты
+89,Ships & boats,Суда и лодки
+90,Optical & medical instruments,Оптические и медицинские приборы
+91,Clocks & watches,Часы
+92,Musical instruments,Музыкальные инструменты
+93,Arms & ammunition,Оружие и боеприпасы
+94,Furniture & lighting,Мебель и светильники
+95,"Toys, games & sports goods","Игрушки, игры и спорттовары"
+96,Miscellaneous manufactures,Прочие промышленные изделия
+97,Art & antiques,Произведения искусства и антиквариат
+99,Not classified,Не классифицировано

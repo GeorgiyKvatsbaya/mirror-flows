@@ -1,0 +1,50 @@
+version: 2
+
+models:
+  - name: mart_trade_monthly
+    description: >
+      IMF monthly goods trade per reporter x partner ('WLD' = world), with rolling 12-month sums
+      and change against the same month a year earlier. Exports FOB, imports CIF ({{ doc('fob_cif') }}).
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments: {combination_of_columns: [entity_code, partner_code, month]}
+    columns:
+      - name: entity_code
+        description: Reporting country entity.
+        data_type: varchar
+        data_tests:
+          - not_null
+          - relationships: {arguments: {to: ref('int_country_entities'), field: entity_code}}
+      - name: partner_code
+        description: Partner entity, or WLD for the total with the world.
+        data_type: varchar
+        data_tests: [not_null]
+      - name: month
+        data_type: date
+        data_tests: [not_null]
+      - name: exports_usd
+        data_type: double
+      - name: imports_usd
+        data_type: double
+      - name: exports_12m_usd
+        description: Exports over the 12 months ending in `month`.
+        data_type: double
+      - name: imports_12m_usd
+        data_type: double
+      - name: exports_yoy
+        description: Change vs the same month a year earlier (0.1 = +10%).
+        data_type: double
+      - name: imports_yoy
+        data_type: double
+
+  - name: mart_source_comparison
+    description: >
+      BACI vs IMF annual exports per country on the overlap years (complete IMF years only).
+      Differences are expected — {{ doc('mirror_flows') }} Re-export hubs report goods in transit
+      as their own exports; BACI attributes them to the producing country.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments: {combination_of_columns: [year, entity_code]}
+    columns:
+      - name: imf_vs_baci
+        description: IMF exports relative to BACI (0.6 = IMF is 60% higher).

@@ -1,0 +1,15 @@
+# In-repo profile: run dbt from this folder (or set DBT_PROFILES_DIR=dbt). Never uses ~/.dbt.
+world_trade_atlas:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: "{{ env_var('WTA_WAREHOUSE', '../data/warehouse.duckdb') }}"
+      threads: 4
+      settings:
+        memory_limit: "{{ env_var('WTA_MEMORY_LIMIT', '8GB') }}"
+        preserve_insertion_order: false
+    ci:
+      type: duckdb
+      path: "{{ env_var('WTA_WAREHOUSE', '../data/ci.duckdb') }}"
+      threads: 2

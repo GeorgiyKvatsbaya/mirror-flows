@@ -1,0 +1,82 @@
+version: 2
+
+sources:
+  - name: baci
+    description: >
+      CEPII BACI, HS92 nomenclature: bilateral trade flows for 200+ countries and ~5,000 HS6
+      products since 1995, built from UN Comtrade with exporter and importer reports reconciled.
+      Licence Etalab 2.0. Ingested by `wta ingest baci` into hive-partitioned Parquet.
+    meta:
+      url: https://www.cepii.fr/CEPII/en/bdd_modele/bdd_modele_item.asp?id=37
+      citation: "Gaulier, G. and Zignago, S. (2010). BACI: International Trade Database at the Product-Level. CEPII Working Paper 2010-23."
+    tables:
+      - name: flows
+        description: One row per year x exporter x importer x HS6 product.
+        meta:
+          external_location: "read_parquet('{{ env_var('WTA_RAW', '../data/raw') }}/baci/year=*/flows.parquet', hive_partitioning = false)"
+        columns:
+          - name: t
+            description: Year.
+          - name: i
+            description: Exporter, BACI (UN M49-based) country code.
+          - name: j
+            description: Importer, BACI country code.
+          - name: k
+            description: HS 1992 six-digit product code.
+          - name: v
+            description: Value in thousands of US dollars (FOB).
+          - name: q
+            description: Quantity in metric tons; missing when not reported.
+      - name: countries
+        description: BACI country codes with names and ISO codes (committed reference copy).
+        meta:
+          external_location: "read_parquet('{{ env_var('WTA_REFERENCE', '../data/reference') }}/baci_countries.parquet')"
+      - name: products
+        description: HS92 six-digit product descriptions shipped with BACI.
+        meta:
+          external_location: "read_parquet('{{ env_var('WTA_REFERENCE', '../data/reference') }}/baci_products.parquet')"
+
+  - name: imf
+    description: >
+      IMF International Trade in Goods (IMTS, formerly Direction of Trade Statistics): monthly
+      exports (FOB) and imports (CIF) by partner country, in US dollars. Includes IMF estimates
+      for economies that do not report monthly. Pulled from 2023 by `wta ingest imf`.
+    meta:
+      url: https://data.imf.org/en/datasets/IMF.STA:IMTS
+    freshness:
+      warn_after: {count: 45, period: day}
+      error_after: {count: 120, period: day}
+    loaded_at_field: loaded_at
+    tables:
+      - name: imts_monthly
+        meta:
+          external_location: "read_parquet('{{ env_var('WTA_RAW', '../data/raw') }}/imf/imts_monthly.parquet')"
+        columns:
+          - name: reporter
+            description: Reporting economy, ISO3.
+          - name: indicator
+            description: XG_FOB_USD (exports, FOB) or MG_CIF_USD (imports, CIF).
+          - name: counterpart
+            description: Partner economy (ISO3) or an IMF aggregate code (G001 = world, G..., GX..., TX...).
+          - name: period
+            description: SDMX month, e.g. 2026-M06.
+          - name: value_usd
+            description: Value in US dollars.
+
+  - name: worldbank
+    description: World Bank country metadata (CC BY 4.0) — region and income group.
+    meta:
+      url: https://api.worldbank.org/v2/country
+    tables:
+      - name: countries
+        meta:
+          external_location: "read_parquet('{{ env_var('WTA_REFERENCE', '../data/reference') }}/wb_countries.parquet')"
+
+  - name: hs
+    description: HS 1992 nomenclature (chapters, headings, subheadings) from the UN Comtrade reference files.
+    meta:
+      url: https://comtradeapi.un.org/files/v1/app/reference/H0.json
+    tables:
+      - name: codes
+        meta:
+          external_location: "read_parquet('{{ env_var('WTA_REFERENCE', '../data/reference') }}/hs92_codes.parquet')"

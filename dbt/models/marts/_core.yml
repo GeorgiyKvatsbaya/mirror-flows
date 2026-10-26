@@ -1,0 +1,89 @@
+version: 2
+
+models:
+  - name: dim_country
+    description: >
+      One row per country entity that appears in BACI. Display names in English and Russian are
+      generated in the browser from `iso2` (Intl.DisplayNames); `name_ru` is filled only for
+      entities without an ISO2 code.
+    columns:
+      - name: entity_code
+        description: "{{ doc('entity_code') }}"
+        data_type: varchar
+        constraints: [{type: not_null}, {type: primary_key}]
+        data_tests: [unique]
+      - name: baci_code
+        description: BACI (UN M49-based) country code.
+        data_type: smallint
+        data_tests: [unique, not_null]
+      - name: iso2
+        description: ISO 3166 alpha-2 code, used for localized names; null for non-ISO entities.
+        data_type: varchar
+      - name: map_iso3
+        description: Natural Earth feature (ADM0_A3) to colour on the world map; null if none.
+        data_type: varchar
+      - name: name_en
+        description: English name from BACI or the override seed.
+        data_type: varchar
+        data_tests: [not_null]
+      - name: name_ru
+        description: Russian name, only for entities without ISO2.
+        data_type: varchar
+      - name: region
+        description: World Bank region; "Other territories" when the World Bank does not list it.
+        data_type: varchar
+        data_tests: [not_null]
+      - name: income_group
+        description: World Bank income group (current classification).
+        data_type: varchar
+      - name: first_year
+        description: First year with exports in BACI.
+        data_type: smallint
+      - name: last_year
+        description: Last year with exports in BACI.
+        data_type: smallint
+      - name: is_historical
+        description: True for entities that stopped reporting (e.g. Belgium-Luxembourg).
+        data_type: boolean
+      - name: is_override
+        description: True when the row comes from `seeds/country_overrides.csv`.
+        data_type: boolean
+      - name: note
+        description: Why the override exists.
+        data_type: varchar
+
+  - name: dim_product
+    description: HS 1992 subheadings (HS6) with heading (HS4), chapter (HS2) and section.
+    columns:
+      - name: hs6
+        data_type: varchar
+        constraints: [{type: not_null}, {type: primary_key}]
+        data_tests: [unique]
+      - name: hs6_name
+        data_type: varchar
+      - name: hs4
+        description: HS4 heading — the product grain used in the app.
+        data_type: varchar
+        data_tests: [not_null]
+      - name: hs4_name
+        description: Official HS4 title (English).
+        data_type: varchar
+      - name: hs2
+        data_type: varchar
+        data_tests:
+          - not_null
+          - relationships: {arguments: {to: ref('hs_chapters'), field: chapter}}
+      - name: hs2_name_en
+        description: Short chapter name (seed), official title as fallback.
+        data_type: varchar
+      - name: hs2_name_ru
+        data_type: varchar
+      - name: section_id
+        data_type: tinyint
+        data_tests: [not_null]
+      - name: section_roman
+        data_type: varchar
+      - name: section_name_en
+        data_type: varchar
+      - name: section_name_ru
+        data_type: varchar

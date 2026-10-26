@@ -1,0 +1,52 @@
+name: world_trade_atlas
+version: "1.0.0"
+config-version: 2
+profile: world_trade_atlas
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+analysis-paths: ["analyses"]
+docs-paths: ["models", "docs"]
+clean-targets: ["target", "dbt_packages"]
+
+vars:
+  # Raw Parquet paths come from env vars WTA_RAW / WTA_REFERENCE (see models/staging/_sources.yml).
+  # First year of the BACI HS92 series and the start of IMF monthly coverage.
+  first_year: 1995
+  imf_first_month: "2023-01-01"
+  # Partners/products below this share are folded into "other" in rankings.
+  top_n: 30
+
+flags:
+  require_explicit_package_overrides_for_builtin_materializations: true
+
+models:
+  world_trade_atlas:
+    +persist_docs: {relation: true, columns: true}
+    staging:
+      +materialized: view
+      +schema: staging
+    intermediate:
+      +materialized: table
+      +schema: intermediate
+    marts:
+      +materialized: table
+      +schema: marts
+      monthly:
+        +tags: ["monthly"]
+
+seeds:
+  world_trade_atlas:
+    +schema: reference
+    hs_sections:
+      +column_types: {section_id: integer, first_chapter: varchar, last_chapter: varchar}
+    hs_chapters:
+      +column_types: {chapter: varchar}
+    country_overrides:
+      +column_types: {baci_code: integer}
+
+data_tests:
+  world_trade_atlas:
+    +store_failures: false

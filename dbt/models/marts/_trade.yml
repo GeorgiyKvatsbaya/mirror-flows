@@ -1,0 +1,169 @@
+version: 2
+
+models:
+  - name: fct_trade_hs6
+    description: >
+      Full-detail fact: one row per year x exporter x importer x HS6 product (~270M rows),
+      values in US dollars FOB. Incremental by year (delete+insert); see the model header.
+      {{ doc('mirror_flows') }}
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments: {combination_of_columns: [year, exporter_code, importer_code, hs6]}
+    columns:
+      - name: year
+        data_tests: [not_null]
+      - name: exporter_code
+        description: Exporting country entity.
+        data_tests:
+          - not_null
+          - relationships: {arguments: {to: ref('dim_country'), field: entity_code}}
+      - name: importer_code
+        description: Importing country entity.
+        data_tests:
+          - not_null
+          - relationships: {arguments: {to: ref('dim_country'), field: entity_code}}
+      - name: hs6
+        data_tests:
+          - not_null
+          - relationships: {arguments: {to: ref('dim_product'), field: hs6}}
+      - name: value_usd
+        description: US dollars, FOB.
+      - name: quantity_t
+        description: Metric tons, when reported.
+
+  - name: mart_country_year
+    description: >
+      One row per country x year: exports, imports, balance, growth, share of world exports,
+      partner and product concentration ({{ doc('hhi') }}), and diversification (number of HS4
+      products with {{ doc('rca') }}).
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments: {combination_of_columns: [year, entity_code]}
+    columns:
+      - name: year
+        data_type: smallint
+        data_tests: [not_null]
+      - name: entity_code
+        data_type: varchar
+        data_tests:
+          - not_null
+          - relationships: {arguments: {to: ref('dim_country'), field: entity_code}}
+      - name: exports_usd
+        data_type: double
+      - name: imports_usd
+        description: Imports valued FOB (see fob_cif).
+        data_type: double
+      - name: balance_usd
+        data_type: double
+      - name: trade_usd
+        description: Exports + imports.
+        data_type: double
+      - name: exports_growth
+        description: Change in exports vs the previous year (0.1 = +10%).
+        data_type: double
+      - name: imports_growth
+        data_type: double
+      - name: world_export_share
+        description: Country's share of world exports (0..1).
+        data_type: double
+        data_tests:
+          - dbt_utils.accepted_range: {arguments: {min_value: 0, max_value: 1}}
+      - name: export_partner_count
+        data_type: integer
+      - name: import_partner_count
+        data_type: integer
+      - name: export_partner_hhi
+        description: Concentration of exports across partners (0..1).
+        data_type: double
+        data_tests:
+          - dbt_utils.accepted_range: {arguments: {min_value: 0, max_value: 1.000001}}
+      - name: export_product_count
+        description: HS4 headings exported.
+        data_type: integer
+      - name: export_product_hhi
+        description: Concentration of exports across HS4 headings (0..1).
+        data_type: double
+        data_tests:
+          - dbt_utils.accepted_range: {arguments: {min_value: 0, max_value: 1.000001}}
+      - name: rca_product_count
+        description: HS4 headings with RCA >= 1 — a diversification measure.
+        data_type: integer
+      - name: top_export_partner
+        data_type: varchar
+      - name: top_import_partner
+        data_type: varchar
+      - name: top_export_hs4
+        data_type: varchar
+
+  - name: mart_country_partner_year
+    description: One row per country x partner x year from the country's point of view.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments: {combination_of_columns: [year, entity_code, partner_code]}
+    columns:
+      - name: export_share
+        description: Partner's share of the country's exports.
+        data_tests:
+          - dbt_utils.accepted_range: {arguments: {min_value: 0, max_value: 1.000001}}
+      - name: import_share
+        description: Partner's share of the country's imports.
+      - name: export_rank
+        description: 1 = largest export destination that year.
+      - name: import_rank
+        description: 1 = largest source of imports that year.
+
+  - name: mart_country_product_year
+    description: One row per country x HS4 heading x year, with world market share and {{ doc('rca') }}
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments: {combination_of_columns: [year, entity_code, hs4]}
+    columns:
+      - name: export_share
+        description: The heading's share of the country's exports.
+      - name: world_market_share
+        description: The country's share of world exports of the heading.
+        data_tests:
+          - dbt_utils.accepted_range: {arguments: {min_value: 0, max_value: 1.000001}}
+      - name: rca
+        description: Balassa RCA; null when the country exports nothing.
+
+  - name: mart_product_year
+    description: One row per HS4 heading x year — world trade, growth, exporter concentration, leaders.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments: {combination_of_columns: [year, hs4]}
+    columns:
+      - name: year
+        data_type: smallint
+        data_tests: [not_null]
+      - name: hs4
+        data_type: varchar
+        data_tests: [not_null]
+      - name: world_usd
+        description: World exports of the heading, US dollars.
+        data_type: double
+      - name: world_share
+        description: The heading's share of all world trade.
+        data_type: double
+      - name: growth
+        description: Change vs the previous year.
+        data_type: double
+      - name: exporter_count
+        data_type: integer
+      - name: exporter_hhi
+        description: "{{ doc('hhi') }}"
+        data_type: double
+      - name: top_exporter
+        data_type: varchar
+      - name: top_exporter_share
+        data_type: double
+      - name: top_importer
+        data_type: varchar
+      - name: top_importer_share
+        data_type: double
+
+  - name: mart_pair_product_year
+    description: Exporter-to-importer trade by HS2 chapter and year, with the chapter's share of the pair.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments: {combination_of_columns: [year, exporter_code, importer_code, hs2]}

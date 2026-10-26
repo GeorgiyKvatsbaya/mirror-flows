@@ -1,0 +1,23 @@
+section_id,roman,first_chapter,last_chapter,name_en,name_ru
+1,I,01,05,Animals & animal products,Животные и продукты животного происхождения
+2,II,06,14,Vegetable products,Продукты растительного происхождения
+3,III,15,15,Fats & oils,Жиры и масла
+4,IV,16,24,"Food, beverages & tobacco","Продукты питания, напитки и табак"
+5,V,25,27,Mineral products & fuels,Минеральные продукты и топливо
+6,VI,28,38,Chemicals,Химическая продукция
+7,VII,39,40,Plastics & rubber,Пластмассы и каучук
+8,VIII,41,43,Hides & leather,Кожевенное сырьё и изделия из кожи
+9,IX,44,46,Wood & cork,Древесина и пробка
+10,X,47,49,Pulp & paper,Целлюлоза и бумага
+11,XI,50,63,Textiles & clothing,Текстиль и одежда
+12,XII,64,67,Footwear & headgear,Обувь и головные уборы
+13,XIII,68,70,"Stone, ceramics & glass","Камень, керамика и стекло"
+14,XIV,71,71,Precious stones & metals,Драгоценные камни и металлы
+15,XV,72,83,Base metals,Недрагоценные металлы
+16,XVI,84,85,Machinery & electronics,Машины и электроника
+17,XVII,86,89,Vehicles & transport,Транспортные средства
+18,XVIII,90,92,"Instruments, optics & clocks","Приборы, оптика и часы"
+19,XIX,93,93,Arms & ammunition,Оружие и боеприпасы
+20,XX,94,96,Miscellaneous manufactures,Прочие промышленные товары
+21,XXI,97,97,Art & antiques,Произведения искусства и антиквариат
+22,—,98,99,Not classified,Не классифицировано

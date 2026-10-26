@@ -1,0 +1,13 @@
+baci_code,entity_code,iso2,map_iso3,name_en,name_ru,region,income_group,note
+58,BLX,,BEL,Belgium-Luxembourg (until 1998),Бельгия и Люксембург (до 1998),Europe & Central Asia,High income,Reported jointly until 1998; Belgium (56) and Luxembourg (442) from 1999
+490,TWN,TW,TWN,Taiwan,Тайвань,East Asia & Pacific,High income,"BACI ""Other Asia, nes"" (UN code 490) is Taiwan in practice"
+530,ANT,,,Netherlands Antilles (until 2010),Нидерландские Антильские острова (до 2010),Latin America & Caribbean,High income,Dissolved in 2010; Curaçao (531) and Bonaire (535) from 2011
+697,XEF,,,"EFTA, not elsewhere specified","ЕАСТ, прочее",Europe & Central Asia,High income,Residual EFTA partner used in 1996-1998
+711,XSA,,ZAF,Southern African Customs Union (until 1999),Южноафриканский таможенный союз (до 1999),Sub-Saharan Africa,Upper middle income,Reported jointly until 1999
+736,XSD,,SDN,Sudan (until 2011),Судан (до 2011),Sub-Saharan Africa,Low income,Includes South Sudan; Sudan (729) from 2012
+849,PUS,,,US Pacific Islands,Малые тихоокеанские острова США,East Asia & Pacific,,Reported until 2002
+891,SCG,,SRB,Serbia and Montenegro (until 2005),Сербия и Черногория (до 2005),Europe & Central Asia,Upper middle income,Serbia (688) and Montenegro (499) from 2006
+200,,,,,,,,Czechoslovakia: dissolved 1993; no flows in BACI HS92 (1995+)
+278,,,,,,,,German Democratic Republic: no flows in BACI HS92 (1995+)
+280,,,,,,,,"Federal Republic of Germany (until 1990): no flows in BACI HS92; Germany is 276"
+810,,,,,,,,USSR: no flows in BACI HS92 (1995+)

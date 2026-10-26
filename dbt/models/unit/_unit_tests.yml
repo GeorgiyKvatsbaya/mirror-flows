@@ -1,0 +1,64 @@
+unit_tests:
+  - name: rca_and_market_share
+    description: Two countries specialised in opposite products get RCA 1.6 and 0.4.
+    model: mart_country_product_year
+    given:
+      - input: ref('int_exports_hs4_yearly')
+        rows:
+          - {year: 2024, entity_code: AAA, hs4: "0101", value_usd: 80}
+          - {year: 2024, entity_code: AAA, hs4: "0201", value_usd: 20}
+          - {year: 2024, entity_code: BBB, hs4: "0101", value_usd: 20}
+          - {year: 2024, entity_code: BBB, hs4: "0201", value_usd: 80}
+      - input: ref('int_imports_hs4_yearly')
+        rows:
+          - {year: 2024, entity_code: CCC, hs4: "0101", value_usd: 100}
+      - input: ref('int_world_hs4_yearly')
+        rows:
+          - {year: 2024, hs4: "0101", world_product_usd: 100, exporter_count: 2, world_total_usd: 200}
+          - {year: 2024, hs4: "0201", world_product_usd: 100, exporter_count: 2, world_total_usd: 200}
+    expect:
+      rows:
+        - {entity_code: AAA, hs4: "0101", export_share: 0.8, world_market_share: 0.8, rca: 1.6}
+        - {entity_code: AAA, hs4: "0201", export_share: 0.2, world_market_share: 0.2, rca: 0.4}
+        - {entity_code: BBB, hs4: "0101", export_share: 0.2, world_market_share: 0.2, rca: 0.4}
+        - {entity_code: BBB, hs4: "0201", export_share: 0.8, world_market_share: 0.8, rca: 1.6}
+        - {entity_code: CCC, hs4: "0101", export_share: null, world_market_share: 0.0, rca: null}
+
+  - name: exporter_concentration
+    description: HHI is 0.6² + 0.4² = 0.52 for a 60/40 split and 1 for a single exporter.
+    model: mart_product_year
+    given:
+      - input: ref('int_exports_hs4_yearly')
+        rows:
+          - {year: 2024, entity_code: AAA, hs4: "0101", value_usd: 60}
+          - {year: 2024, entity_code: BBB, hs4: "0101", value_usd: 40}
+          - {year: 2024, entity_code: AAA, hs4: "0201", value_usd: 100}
+      - input: ref('int_imports_hs4_yearly')
+        rows:
+          - {year: 2024, entity_code: CCC, hs4: "0101", value_usd: 100}
+          - {year: 2024, entity_code: CCC, hs4: "0201", value_usd: 100}
+      - input: ref('int_world_hs4_yearly')
+        rows:
+          - {year: 2024, hs4: "0101", world_product_usd: 100, exporter_count: 2, world_total_usd: 200}
+          - {year: 2024, hs4: "0201", world_product_usd: 100, exporter_count: 1, world_total_usd: 200}
+    expect:
+      rows:
+        - {hs4: "0101", exporter_hhi: 0.52, world_share: 0.5, top_exporter: AAA, top_exporter_share: 0.6, top_importer: CCC}
+        - {hs4: "0201", exporter_hhi: 1.0, world_share: 0.5, top_exporter: AAA, top_exporter_share: 1.0, top_importer: CCC}
+
+  - name: monthly_yoy_with_a_missing_month
+    description: Year-ago values and rolling 12-month sums are exact even when a month is missing.
+    model: mart_trade_monthly
+    given:
+      - input: ref('int_imf_pair_monthly')
+        rows:
+          - {reporter_code: AAA, partner_code: WLD, month: "2024-01-01", exports_usd: 100, imports_usd: 10}
+          - {reporter_code: AAA, partner_code: WLD, month: "2024-03-01", exports_usd: 50, imports_usd: 10}
+          - {reporter_code: AAA, partner_code: WLD, month: "2025-01-01", exports_usd: 150, imports_usd: 10}
+          - {reporter_code: AAA, partner_code: WLD, month: "2025-03-01", exports_usd: 100, imports_usd: 20}
+    expect:
+      rows:
+        - {month: "2024-01-01", exports_12m_usd: 100, exports_yoy: null, imports_yoy: null}
+        - {month: "2024-03-01", exports_12m_usd: 150, exports_yoy: null, imports_yoy: null}
+        - {month: "2025-01-01", exports_12m_usd: 200, exports_yoy: 0.5, imports_yoy: 0.0}
+        - {month: "2025-03-01", exports_12m_usd: 250, exports_yoy: 1.0, imports_yoy: 1.0}
