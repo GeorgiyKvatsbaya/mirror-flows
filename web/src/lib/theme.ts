@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 export type Theme = "light" | "dark";
 
-const STORAGE_KEY = "wta-theme";
+const STORAGE_KEY = "mf-theme";
 const media = () => window.matchMedia("(prefers-color-scheme: dark)");
 
 export function currentTheme(): Theme {
@@ -18,7 +18,7 @@ export function setTheme(theme: Theme) {
   } catch {
     // Not persisting the choice is fine.
   }
-  window.dispatchEvent(new Event("wta-theme"));
+  window.dispatchEvent(new Event("mf-theme"));
 }
 
 /** Re-renders when the theme changes, via the toggle or the OS setting. */
@@ -28,10 +28,10 @@ export function useTheme(): Theme {
     const update = () => setState(currentTheme());
     const query = media();
     query.addEventListener("change", update);
-    window.addEventListener("wta-theme", update);
+    window.addEventListener("mf-theme", update);
     return () => {
       query.removeEventListener("change", update);
-      window.removeEventListener("wta-theme", update);
+      window.removeEventListener("mf-theme", update);
     };
   }, []);
   return theme;

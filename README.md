@@ -1,9 +1,9 @@
-# World Trade Atlas
+# Mirror Flows
 
 **Who trades what with whom** — goods trade between 200+ economies since 1995, by product, with
 monthly updates. A dbt + DuckDB analytics project with a static EN/RU web app on top.
 
-**Live:** https://world-trade-atlas-one.vercel.app · **dbt docs & lineage:** https://world-trade-atlas-one.vercel.app/dbt/
+**Live:** https://mirrorflows.vercel.app · **dbt docs & lineage:** https://mirrorflows.vercel.app/dbt/
 
 | | |
 |---|---|
@@ -15,13 +15,13 @@ monthly updates. A dbt + DuckDB analytics project with a static EN/RU web app on
 
 ```
 CEPII / IMF / World Bank / UN Comtrade
-        │  wta ingest …           (ingest/wta: polite HTTP, resumable download, typed Parquet)
+        │  mflows ingest …        (ingest/mflows: polite HTTP, resumable download, typed Parquet)
         ▼
 data/raw/*.parquet  +  data/reference/*.parquet (small, committed)
         │  dbt build              (dbt/: staging → intermediate → marts, DuckDB)
         ▼
 data/warehouse.duckdb
-        │  wta export             (JSON per page + Parquet for cross-filters, model.json for lineage)
+        │  mflows export          (JSON per page + Parquet for cross-filters, model.json for lineage)
         ▼
 web/public/data  →  web/ (React + ECharts)  →  Vercel
 ```
@@ -48,7 +48,7 @@ web/public/data  →  web/ (React + ECharts)  →  Vercel
   ×2 of BACI with documented exceptions in `seeds/source_gap_exceptions.csv`).
 - **Exposures** for every web page, so the lineage graph runs from source to page.
 - **Data model page** (`/model` on the site): the full DAG drawn from `manifest.json` and the last
-  build's results (`wta lineage` → `model.json`) — click a node for its description, columns,
+  build's results (`mflows lineage` → `model.json`) — click a node for its description, columns,
   tests, row count and SQL.
 
 ## Run it
@@ -62,7 +62,7 @@ cd web && npm run dev
 ```
 
 The dbt profile lives in `dbt/profiles.yml` (run dbt from `dbt/`); paths can be overridden with
-`WTA_RAW`, `WTA_REFERENCE`, `WTA_WAREHOUSE`, `WTA_MEMORY_LIMIT`.
+`MF_RAW`, `MF_REFERENCE`, `MF_WAREHOUSE`, `MF_MEMORY_LIMIT`.
 
 ## Refresh
 
@@ -78,7 +78,7 @@ The dbt profile lives in `dbt/profiles.yml` (run dbt from `dbt/`); paths can be 
 
 ## Web data
 
-`wta export` writes ~160 MB (budget 175 MB, checked on every export):
+`mflows export` writes ~160 MB (budget 175 MB, checked on every export):
 
 - **JSON** for page skeletons — `meta.json`, `world.json`, one file per country (233) and per HS4
   product (1,241); money in US$ millions rounded to $10,000.

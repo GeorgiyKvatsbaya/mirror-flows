@@ -5,7 +5,7 @@ exposures:
     label: World overview
     type: application
     maturity: high
-    url: https://world-trade-atlas-one.vercel.app/en
+    url: https://mirrorflows.vercel.app/en
     description: World map, world trade over time, product mix and top traders (world.json, meta.json); click a chapter to filter by it (chapters/{hs2}.parquet).
     depends_on:
       - ref('mart_country_year')
@@ -22,7 +22,7 @@ exposures:
     label: Country profile
     type: application
     maturity: high
-    url: https://world-trade-atlas-one.vercel.app/en/country/GEO
+    url: https://mirrorflows.vercel.app/en/country/GEO
     description: Exports and imports over time, partners and product mix with a cross-filter between them, strongest products, concentration and IMF months (countries/{code}.json, cross/{code}.parquet).
     depends_on:
       - ref('mart_country_year')
@@ -39,7 +39,7 @@ exposures:
     label: Partner pair
     type: application
     maturity: medium
-    url: https://world-trade-atlas-one.vercel.app/en/country/GEO/partner/TUR
+    url: https://mirrorflows.vercel.app/en/country/GEO/partner/TUR
     description: Trade between two countries in both directions by chapter, with an HS4 drill-down (cross/{code}.parquet, routes/exporter/{code}.parquet).
     depends_on:
       - ref('mart_country_partner_year')
@@ -54,7 +54,7 @@ exposures:
     label: Product
     type: application
     maturity: high
-    url: https://world-trade-atlas-one.vercel.app/en/product/0901
+    url: https://mirrorflows.vercel.app/en/product/0901
     description: World trade in one HS4 heading, its exporters and importers, market shares, and each exporter's destinations (products/{hs4}.json, routes/product/{hs4}.parquet).
     depends_on:
       - ref('mart_product_year')

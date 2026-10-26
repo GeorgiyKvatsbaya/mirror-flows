@@ -23,14 +23,14 @@ jobs:
           python-version: "3.11"
       - run: uv sync --frozen
       - name: Ingest IMF months
-        run: uv run wta ingest imf
+        run: uv run mflows ingest imf
       - name: dbt build (IMF branch only; BACI is not needed)
         working-directory: dbt
         run: |
           uv run dbt deps
           uv run dbt build --select +tag:monthly
       - name: Export the monthly series
-        run: uv run wta export --monthly-only
+        run: uv run mflows export --monthly-only
       - name: Commit if changed
         run: |
           if git diff --quiet -- web/public/data; then

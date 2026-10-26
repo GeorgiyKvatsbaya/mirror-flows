@@ -8,7 +8,7 @@ exclude_rules = layout.long_lines, structure.column_order, ambiguous.column_coun
 [sqlfluff:templater:dbt]
 project_dir = .
 profiles_dir = .
-profile = world_trade_atlas
+profile = mirror_flows
 target = dev
 
 [sqlfluff:rules:capitalisation.keywords]

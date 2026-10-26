@@ -8,5 +8,5 @@ DATA = ROOT / "data"
 RAW = DATA / "raw"
 REFERENCE = DATA / "reference"
 # Same override as dbt/profiles.yml (relative paths are relative to dbt/).
-WAREHOUSE = (ROOT / "dbt" / os.environ.get("WTA_WAREHOUSE", "../data/warehouse.duckdb")).resolve()
+WAREHOUSE = (ROOT / "dbt" / os.environ.get("MF_WAREHOUSE", "../data/warehouse.duckdb")).resolve()
 WEB_DATA = ROOT / "web" / "public" / "data"

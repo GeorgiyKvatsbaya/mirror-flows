@@ -1,7 +1,7 @@
-name: world_trade_atlas
+name: mirror_flows
 version: "1.0.0"
 config-version: 2
-profile: world_trade_atlas
+profile: mirror_flows
 
 model-paths: ["models"]
 seed-paths: ["seeds"]
@@ -12,7 +12,7 @@ docs-paths: ["models", "docs"]
 clean-targets: ["target", "dbt_packages"]
 
 vars:
-  # Raw Parquet paths come from env vars WTA_RAW / WTA_REFERENCE (see models/staging/_sources.yml).
+  # Raw Parquet paths come from env vars MF_RAW / MF_REFERENCE (see models/staging/_sources.yml).
   # First year of the BACI HS92 series and the start of IMF monthly coverage.
   first_year: 1995
   imf_first_month: "2023-01-01"
@@ -23,7 +23,7 @@ flags:
   require_explicit_package_overrides_for_builtin_materializations: true
 
 models:
-  world_trade_atlas:
+  mirror_flows:
     +persist_docs: {relation: true, columns: true}
     staging:
       +materialized: view
@@ -38,7 +38,7 @@ models:
         +tags: ["monthly"]
 
 seeds:
-  world_trade_atlas:
+  mirror_flows:
     +schema: reference
     hs_sections:
       +column_types: {section_id: integer, first_chapter: varchar, last_chapter: varchar}
@@ -48,5 +48,5 @@ seeds:
       +column_types: {baci_code: integer}
 
 data_tests:
-  world_trade_atlas:
+  mirror_flows:
     +store_failures: false

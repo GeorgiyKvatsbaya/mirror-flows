@@ -1,4 +1,4 @@
-/** dbt lineage (model.json from `wta lineage`) laid out as columns: sources & seeds → staging →
+/** dbt lineage (model.json from `mflows lineage`) laid out as columns: sources & seeds → staging →
  *  intermediate → marts → web pages. Within a column, nodes are ordered by the average position
  *  of their parents (barycentre), which keeps most edges short and uncrossed. */
 

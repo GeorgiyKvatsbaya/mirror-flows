@@ -1,4 +1,4 @@
-"""`wta` command line: ingest sources, build boundaries, export web data."""
+"""`mflows` command line: ingest sources, build boundaries, export web data."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ import argparse
 
 
 def main(argv: list[str] | None = None) -> None:
-    parser = argparse.ArgumentParser(prog="wta", description=__doc__)
+    parser = argparse.ArgumentParser(prog="mflows", description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
 
     ingest = sub.add_parser("ingest", help="Download a source into data/raw or data/reference")

@@ -26,7 +26,7 @@ jobs:
       - name: dbt build on CI fixtures (models, contracts, unit + data tests)
         working-directory: dbt
         env:
-          WTA_RAW: ../tests/fixtures/raw
+          MF_RAW: ../tests/fixtures/raw
         run: uv run dbt build --target ci
       - name: sqlfluff
         working-directory: dbt

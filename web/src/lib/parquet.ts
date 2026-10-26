@@ -2,7 +2,7 @@ import { parquetReadObjects } from "hyparquet";
 import { useEffect, useState } from "react";
 import { DATA_BASE } from "./data";
 
-/** Parquet files exported by `wta export` (cross-filters): small per country / chapter / product,
+/** Parquet files exported by `mflows export` (cross-filters): small per country / chapter / product,
  *  so each is fetched whole and decoded in the browser with hyparquet. */
 const cache = new Map<string, Promise<Record<string, unknown>[]>>();
 

@@ -751,6 +751,42 @@ wheels = [
 ]
 
 [[package]]
+name = "mirror-flows"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "dbt-core" },
+    { name = "dbt-duckdb" },
+    { name = "duckdb" },
+    { name = "pyarrow" },
+    { name = "requests" },
+    { name = "shapely" },
+]
+
+[package.optional-dependencies]
+dev = [
+    { name = "pytest" },
+    { name = "ruff" },
+    { name = "sqlfluff" },
+    { name = "sqlfluff-templater-dbt" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "dbt-core", specifier = "==1.12.5" },
+    { name = "dbt-duckdb", specifier = "==1.11.0" },
+    { name = "duckdb", specifier = "==1.5.6" },
+    { name = "pyarrow", specifier = "==26.0.0" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = "==9.1.1" },
+    { name = "requests", specifier = "==2.34.2" },
+    { name = "ruff", marker = "extra == 'dev'", specifier = "==0.17.0" },
+    { name = "shapely", specifier = "==2.2.0" },
+    { name = "sqlfluff", marker = "extra == 'dev'", specifier = "==4.4.0" },
+    { name = "sqlfluff-templater-dbt", marker = "extra == 'dev'", specifier = "==4.4.0" },
+]
+provides-extras = ["dev"]
+
+[[package]]
 name = "more-itertools"
 version = "10.8.0"
 source = { registry = "https://pypi.org/simple" }
@@ -2093,42 +2129,6 @@ sdist = { url = "https://files.pythonhosted.org/packages/e3/05/b17359e1cefb4f909
 wheels = [
     { url = "https://files.pythonhosted.org/packages/92/9d/c4e665119135114480843e7ab388fa94d8480650450e6f8e26b70d323a4c/urllib3-2.8.0-py3-none-any.whl", hash = "sha256:0cf3cae568d36aa9576b28dfb35f11328f1cb974ca7647d9475ebb86c75ac6e3", size = 135717, upload-time = "2026-09-15T19:29:34.577Z" },
 ]
-
-[[package]]
-name = "world-trade-atlas"
-version = "0.1.0"
-source = { editable = "." }
-dependencies = [
-    { name = "dbt-core" },
-    { name = "dbt-duckdb" },
-    { name = "duckdb" },
-    { name = "pyarrow" },
-    { name = "requests" },
-    { name = "shapely" },
-]
-
-[package.optional-dependencies]
-dev = [
-    { name = "pytest" },
-    { name = "ruff" },
-    { name = "sqlfluff" },
-    { name = "sqlfluff-templater-dbt" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "dbt-core", specifier = "==1.12.5" },
-    { name = "dbt-duckdb", specifier = "==1.11.0" },
-    { name = "duckdb", specifier = "==1.5.6" },
-    { name = "pyarrow", specifier = "==26.0.0" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = "==9.1.1" },
-    { name = "requests", specifier = "==2.34.2" },
-    { name = "ruff", marker = "extra == 'dev'", specifier = "==0.17.0" },
-    { name = "shapely", specifier = "==2.2.0" },
-    { name = "sqlfluff", marker = "extra == 'dev'", specifier = "==4.4.0" },
-    { name = "sqlfluff-templater-dbt", marker = "extra == 'dev'", specifier = "==4.4.0" },
-]
-provides-extras = ["dev"]
 
 [[package]]
 name = "zipp"

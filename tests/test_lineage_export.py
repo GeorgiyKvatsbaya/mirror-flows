@@ -4,22 +4,22 @@ import json
 
 import duckdb
 
-from wta import export, lineage
+from mflows import export, lineage
 
 
 def manifest(tmp_path):
     def model(name, fqn_layer, parents, contract=False):
         return {
-            "unique_id": f"model.world_trade_atlas.{name}",
+            "unique_id": f"model.mirror_flows.{name}",
             "resource_type": "model",
-            "package_name": "world_trade_atlas",
+            "package_name": "mirror_flows",
             "name": name,
-            "fqn": ["world_trade_atlas", fqn_layer, name],
+            "fqn": ["mirror_flows", fqn_layer, name],
             "config": {"materialized": "table"},
             "contract": {"enforced": contract},
             "description": f"{name} description",
             "columns": {"year": {"name": "year", "data_type": "smallint", "description": ""}},
-            "depends_on": {"nodes": parents, "macros": ["macro.world_trade_atlas.hhi"]},
+            "depends_on": {"nodes": parents, "macros": ["macro.mirror_flows.hhi"]},
             "raw_code": "select 1",
             "original_file_path": f"models/{name}.sql",
             "schema": "marts",
@@ -30,42 +30,42 @@ def manifest(tmp_path):
     data = {
         "metadata": {"dbt_version": "1.12.5", "generated_at": "2026-10-26T00:00:00Z"},
         "sources": {
-            "source.world_trade_atlas.baci.flows": {
-                "unique_id": "source.world_trade_atlas.baci.flows",
+            "source.mirror_flows.baci.flows": {
+                "unique_id": "source.mirror_flows.baci.flows",
                 "resource_type": "source",
-                "package_name": "world_trade_atlas",
+                "package_name": "mirror_flows",
                 "source_name": "baci",
                 "name": "flows",
-                "fqn": ["world_trade_atlas", "staging", "baci", "flows"],
+                "fqn": ["mirror_flows", "staging", "baci", "flows"],
                 "description": "BACI",
                 "columns": {},
                 "meta": {},
             }
         },
         "nodes": {
-            "model.world_trade_atlas.stg": model(
-                "stg", "staging", ["source.world_trade_atlas.baci.flows"]
+            "model.mirror_flows.stg": model(
+                "stg", "staging", ["source.mirror_flows.baci.flows"]
             ),
-            "model.world_trade_atlas.mart": model(
-                "mart", "marts", ["model.world_trade_atlas.stg"], contract=True
+            "model.mirror_flows.mart": model(
+                "mart", "marts", ["model.mirror_flows.stg"], contract=True
             ),
-            "test.world_trade_atlas.unique_mart": {
-                "unique_id": "test.world_trade_atlas.unique_mart",
+            "test.mirror_flows.unique_mart": {
+                "unique_id": "test.mirror_flows.unique_mart",
                 "resource_type": "test",
-                "attached_node": "model.world_trade_atlas.mart",
-                "depends_on": {"nodes": ["model.world_trade_atlas.mart"]},
+                "attached_node": "model.mirror_flows.mart",
+                "depends_on": {"nodes": ["model.mirror_flows.mart"]},
             },
         },
         "exposures": {
-            "exposure.world_trade_atlas.page": {
-                "unique_id": "exposure.world_trade_atlas.page",
+            "exposure.mirror_flows.page": {
+                "unique_id": "exposure.mirror_flows.page",
                 "resource_type": "exposure",
-                "package_name": "world_trade_atlas",
+                "package_name": "mirror_flows",
                 "name": "page",
                 "label": "Page",
-                "fqn": ["world_trade_atlas", "page"],
+                "fqn": ["mirror_flows", "page"],
                 "description": "",
-                "depends_on": {"nodes": ["model.world_trade_atlas.mart"]},
+                "depends_on": {"nodes": ["model.mirror_flows.mart"]},
                 "url": "https://example.org",
             }
         },
@@ -83,10 +83,10 @@ def test_model_json(tmp_path, monkeypatch):
     payload = lineage.build(manifest(tmp_path), out)
     nodes = {n["name"]: n for n in payload["nodes"]}
     assert [n["column"] for n in payload["nodes"]] == [0, 1, 3, 4]  # source, staging, mart, page
-    assert nodes["mart"]["parents"] == ["model.world_trade_atlas.stg"]  # macros dropped
+    assert nodes["mart"]["parents"] == ["model.mirror_flows.stg"]  # macros dropped
     assert nodes["mart"]["contract"] is True
     assert nodes["mart"]["tests"] == {"tests": 1, "passed": 0, "failed": 0}
-    assert nodes["Page"]["docs"] == "/dbt/#!/exposure/exposure.world_trade_atlas.page"
+    assert nodes["Page"]["docs"] == "/dbt/#!/exposure/exposure.mirror_flows.page"
     assert payload["tests_total"] == 1
     assert json.loads(out.read_text())["dbt_version"] == "1.12.5"
 

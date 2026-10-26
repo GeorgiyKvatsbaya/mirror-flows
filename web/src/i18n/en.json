@@ -1,5 +1,5 @@
 {
-  "site.name": "World Trade Atlas",
+  "site.name": "Mirror Flows",
   "nav.world": "World",
   "nav.countries": "Countries",
   "nav.products": "Products",
@@ -293,5 +293,6 @@
   "model.openDocs": "Open in dbt docs",
   "model.openPage": "Open the page",
   "model.sql": "SQL",
-  "model.columns": "Columns"
+  "model.columns": "Columns",
+  "about.name": "Why “Mirror Flows”: every trade flow is reported twice — once by the exporter and once by the importer, a mirror image that rarely matches. Reconciling those mirror flows is what makes the numbers on this site comparable."
 }

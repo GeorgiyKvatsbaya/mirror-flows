@@ -92,7 +92,7 @@ def build(
     nodes = []
     for node in candidates:
         kind = node["resource_type"]
-        if kind not in GRAPH_TYPES or node.get("package_name") != "world_trade_atlas":
+        if kind not in GRAPH_TYPES or node.get("package_name") != "mirror_flows":
             continue
         config = node.get("config", {})
         layer = layer_of(node)

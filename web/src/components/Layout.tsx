@@ -17,7 +17,7 @@ const NAV: { path: string; key: MessageKey }[] = [
   { path: "about", key: "nav.about" },
 ];
 
-export const REPO_URL = "https://github.com/GeorgiyKvatsbaya/world-trade-atlas";
+export const REPO_URL = "https://github.com/GeorgiyKvatsbaya/mirror-flows";
 
 function ThemeToggle() {
   const { t } = useI18n();

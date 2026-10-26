@@ -39,7 +39,7 @@ def reporters() -> list[str]:
         if (REFERENCE / f"{name}_countries.parquet").exists()
     ]
     if not present:
-        raise SystemExit("Run `wta ingest worldbank` (or baci) first")
+        raise SystemExit("Run `mflows ingest worldbank` (or baci) first")
     rows = duckdb.sql(
         f"SELECT DISTINCT * FROM ({' UNION '.join(present)}) t(code) "
         "WHERE code IS NOT NULL ORDER BY 1"

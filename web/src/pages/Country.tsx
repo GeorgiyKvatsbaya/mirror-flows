@@ -186,7 +186,8 @@ function CountryView({ code, names, data, cross }: { code: string; names: Names;
               imports: fmt.money(current.imports),
               partner: names.country(current.top_export_partner),
               product: names.productShort(current.top_export_hs4),
-            })}
+              // A shortened name already ends in "…"; don't follow it with the sentence's full stop.
+            }).replace(/…\.$/, "…")}
           </p>
         )}
       </header>

@@ -10,7 +10,7 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-USER_AGENT = "world-trade-atlas (+https://github.com/GeorgiyKvatsbaya/world-trade-atlas)"
+USER_AGENT = "mirror-flows (+https://github.com/GeorgiyKvatsbaya/mirror-flows)"
 
 
 class PoliteClient:

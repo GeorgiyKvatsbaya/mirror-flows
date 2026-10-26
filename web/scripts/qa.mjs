@@ -1,10 +1,10 @@
 // QA pass: accessibility (axe), layout overflow on desktop and phone, light and dark, and the
-// main interactions. Usage: SMOKE_URL=https://world-trade-atlas-one.vercel.app node scripts/qa.mjs
+// main interactions. Usage: SMOKE_URL=https://mirrorflows.vercel.app node scripts/qa.mjs
 import AxeBuilder from "@axe-core/playwright";
 import { chromium } from "@playwright/test";
 
 const BASE = process.env.SMOKE_URL ?? "http://localhost:4173";
-const PAGES = ["", "/countries", "/country/DEU", "/country/GEO?partner=TUR", "/country/GEO/partner/TUR?hs2=87", "/products", "/product/2709?trader=SAU", "/compare", "/model?node=model.world_trade_atlas.mart_country_year", "/about"];
+const PAGES = ["", "/countries", "/country/DEU", "/country/GEO?partner=TUR", "/country/GEO/partner/TUR?hs2=87", "/products", "/product/2709?trader=SAU", "/compare", "/model?node=model.mirror_flows.mart_country_year", "/about"];
 const findings = [];
 const note = (area, text) => findings.push(`[${area}] ${text}`);
 
@@ -125,7 +125,7 @@ await until(async () => page.url().endsWith("/en/country/GEO"), "search did not 
 // Data model: pick a node from the table.
 await page.goto(`${BASE}/en/model`, { waitUntil: "networkidle" });
 await page.getByRole("button", { name: "fct_trade_hs6", exact: true }).click();
-await until(async () => page.url().includes("node=model.world_trade_atlas.fct_trade_hs6"), "data model node selection not in URL");
+await until(async () => page.url().includes("node=model.mirror_flows.fct_trade_hs6"), "data model node selection not in URL");
 await until(async () => (await page.getByRole("heading", { name: "fct_trade_hs6", level: 2 }).count()) === 1, "node details missing");
 
 // Theme toggle.

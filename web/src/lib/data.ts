@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-/** Columnar table as written by `wta export`. */
+/** Columnar table as written by `mflows export`. */
 export interface Table {
   columns: string[];
   rows: unknown[][];

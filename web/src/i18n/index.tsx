@@ -9,7 +9,7 @@ export type MessageKey = keyof typeof en;
 export const DICTIONARIES: Record<Lang, Record<MessageKey, string>> = { en, ru };
 export const LANG_NAMES: Record<Lang, string> = { en: "EN", ru: "РУ" };
 export const LOCALES: Record<Lang, string> = { en: "en-GB", ru: "ru-RU" };
-const STORAGE_KEY = "wta-lang";
+const STORAGE_KEY = "mf-lang";
 
 export function isLang(value: string | undefined): value is Lang {
   return LANGS.includes(value as Lang);

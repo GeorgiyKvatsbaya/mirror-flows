@@ -5,7 +5,7 @@ from pathlib import Path
 import duckdb
 import pytest
 
-from wta import baci, export, imf
+from mflows import baci, export, imf
 
 SAMPLES = Path(__file__).parent / "fixtures" / "samples"
 

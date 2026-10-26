@@ -25,6 +25,7 @@ export default function About() {
       <header className="page-head">
         <h1>{t("about.title")}</h1>
         <p className="lede">{t("about.lede")}</p>
+        <p>{t("about.name")}</p>
       </header>
 
       <div className="prose">

@@ -15,7 +15,7 @@ interface GeoFeature {
 
 let registered: Promise<GeoFeature[]> | null = null;
 
-/** Natural Earth countries, keyed by ADM0_A3 (see `wta boundaries`). */
+/** Natural Earth countries, keyed by ADM0_A3 (see `mflows boundaries`). */
 function loadWorld(): Promise<GeoFeature[]> {
   registered ??= fetchJson<{ features: GeoFeature[] }>("geo/world.json").then((geojson) => {
     echarts.registerMap("world", geojson as never);
