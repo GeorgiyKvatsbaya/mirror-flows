@@ -1,0 +1,44 @@
+name: Refresh IMF months
+
+# IMF IMTS publishes new months continuously; once a month is enough for this site.
+on:
+  schedule:
+    - cron: "17 6 20 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-imf
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.11"
+      - run: uv sync --frozen
+      - name: Ingest IMF months
+        run: uv run wta ingest imf
+      - name: dbt build (IMF branch only; BACI is not needed)
+        working-directory: dbt
+        run: |
+          uv run dbt deps
+          uv run dbt build --select +tag:monthly
+      - name: Export the monthly series
+        run: uv run wta export --monthly-only
+      - name: Commit if changed
+        run: |
+          if git diff --quiet -- web/public/data; then
+            echo "No new months."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add web/public/data
+          git commit -m "Refresh IMF monthly data ($(date -u +%Y-%m-%d))"
+          git push

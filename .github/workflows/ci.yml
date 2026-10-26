@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  pipeline:
+    name: Python, dbt (fixtures), sqlfluff
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.11"
+      - run: uv sync --extra dev --frozen
+      - run: uv run ruff check ingest scripts tests
+      - run: uv run pytest
+      - name: dbt deps
+        working-directory: dbt
+        run: uv run dbt deps
+      - name: dbt build on CI fixtures (models, contracts, unit + data tests)
+        working-directory: dbt
+        env:
+          WTA_RAW: ../tests/fixtures/raw
+        run: uv run dbt build --target ci
+      - name: sqlfluff
+        working-directory: dbt
+        run: uv run sqlfluff lint models tests
+
+  web:
+    name: Web typecheck, tests, build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
