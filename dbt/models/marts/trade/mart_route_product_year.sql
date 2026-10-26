@@ -14,13 +14,13 @@
 
 with flows as (
     select * from {{ ref('fct_trade_hs6') }}
-    where
-        year >= {{ var('routes_first_year', 2015) }}
-        {% if var('baci_years', none) %}
-        and year in ({{ var('baci_years') | join(', ') }})
+    {% if var('baci_years', none) %}
+    where year in ({{ var('baci_years') | join(', ') }}) and year >= {{ var('routes_first_year', 2015) }}
     {% elif is_incremental() %}
-            and year > (select max(year) from {{ this }})
-        {% endif %}
+    where year > (select max(year) from {{ this }})
+    {% else %}
+    where year >= {{ var('routes_first_year', 2015) }}
+    {% endif %}
 )
 
 select
