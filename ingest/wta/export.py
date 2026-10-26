@@ -330,11 +330,15 @@ def refresh_monthly(con: duckdb.DuckDBPyConnection) -> None:
         payload = json.loads(path.read_text())
         payload["monthly"] = monthly(con, path.stem)
         write(path, payload)
+    # Touch meta.json only when the IMF moved on, so a run without news leaves git clean
+    # (the workflow commits only when web/public/data changed).
     meta_path = WEB_DATA / "meta.json"
     payload = json.loads(meta_path.read_text())
-    payload["imf"]["last_month"] = latest_month.isoformat()[:7]
-    payload["built_at"] = datetime.now(UTC).isoformat(timespec="seconds")
-    write(meta_path, payload)
+    last_month = latest_month.isoformat()[:7]
+    if payload["imf"]["last_month"] != last_month:
+        payload["imf"]["last_month"] = last_month
+        payload["built_at"] = datetime.now(UTC).isoformat(timespec="seconds")
+        write(meta_path, payload)
     print(f"Monthly series refreshed in {len(files)} country files (latest {latest_month:%Y-%m})")
 
 
