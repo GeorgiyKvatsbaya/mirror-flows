@@ -92,16 +92,19 @@ export function escapeHtml(text: string): string {
 }
 
 interface BarOptions {
-  items: { label: string; value: number | null }[];
+  /** `id` is returned by click handlers (see onBarClick); defaults to the label. */
+  items: { label: string; value: number | null; id?: string }[];
   format: Format;
   /** Colour negative bars with the diverging pole. */
   diverging?: boolean;
   /** Palette slot for the bars. */
   color?: number;
+  /** Selected item id: drawn at full strength, the others muted. */
+  selected?: string | null;
 }
 
 /** Ranked horizontal bars: one colour, value labels, longest first. */
-export function rankedBarChart({ items, format, diverging = false, color = 0 }: BarOptions): OptionBuilder {
+export function rankedBarChart({ items, format, diverging = false, color = 0, selected = null }: BarOptions): OptionBuilder {
   const sorted = [...items].filter((item) => item.value !== null).sort((a, b) => (b.value ?? 0) - (a.value ?? 0));
   return (theme: ChartTheme) => {
     const negative = cssColor("--diverging-neg") || theme.series[7];
@@ -112,17 +115,25 @@ export function rankedBarChart({ items, format, diverging = false, color = 0 }: 
       grid: { left: 8, right: 64, top: 4, bottom: 4, containLabel: true },
       tooltip: { ...(base.tooltip as object), trigger: "item", valueFormatter: format },
       xAxis: { ...valueAxis(theme), splitLine: { show: false }, axisLabel: { show: false } },
-      yAxis: { ...categoryAxis(theme, sorted.map((item) => item.label), true), axisLabel: { color: theme.ink2, width: 150, overflow: "truncate" } },
+      yAxis: {
+        ...categoryAxis(theme, sorted.map((item) => item.label), true),
+        axisLabel: { color: theme.ink2, width: 150, overflow: "truncate" },
+        // Labels are clickable too (a bar can be too short to hit).
+        triggerEvent: true,
+      },
       series: [
         {
           ...barSeries(
             "",
             sorted.map((item) => {
               const value = item.value ?? 0;
+              const dimmed = selected !== null && (item.id ?? item.label) !== selected;
               return {
                 value,
+                id: item.id ?? item.label,
                 itemStyle: {
                   color: diverging && value < 0 ? negative : fill,
+                  opacity: dimmed ? 0.35 : 1,
                   borderRadius: value < 0 ? [4, 0, 0, 4] : [0, 4, 4, 0],
                 },
               };
@@ -150,8 +161,9 @@ export interface TreemapGroup {
   children: { name: string; value: number; id: string }[];
 }
 
-/** Two-level treemap (section -> chapter); a surface-coloured gap separates the tiles. */
-export function treemapChart(groups: TreemapGroup[], format: Format, total: number): OptionBuilder {
+/** Two-level treemap (section -> chapter); a surface-coloured gap separates the tiles.
+ *  With `selected` (a chapter id) the other tiles are muted. */
+export function treemapChart(groups: TreemapGroup[], format: Format, total: number, selected: string | null = null): OptionBuilder {
   return (theme: ChartTheme) => ({
     textStyle: { fontFamily: theme.font, color: theme.ink2 },
     aria: { enabled: true },
@@ -196,7 +208,10 @@ export function treemapChart(groups: TreemapGroup[], format: Format, total: numb
         data: groups.map((group) => ({
           name: group.name,
           itemStyle: { color: theme.series[group.color % theme.series.length] },
-          children: group.children,
+          children: group.children.map((child) => ({
+            ...child,
+            itemStyle: selected && child.id !== selected ? { opacity: 0.3 } : undefined,
+          })),
         })),
       },
     ],
@@ -221,4 +236,53 @@ export function sectionColor(section: number | undefined): number {
     20: 5, 21: 5, 22: 5, // miscellaneous: dark green
   };
   return map[section ?? 22] ?? 5;
+}
+
+/** Attach a click handler that reports the clicked item's id: bar `id`, treemap leaf `id`, or a
+ *  category-axis label (mapped back through `labelToId`). Returns an `onReady` callback. */
+export function onItemClick(handler: (id: string) => void, labelToId?: Map<string, string>) {
+  return (chart: { off: (event: string) => void; on: (event: string, cb: (params: unknown) => void) => void }) => {
+    chart.off("click");
+    chart.on("click", (raw) => {
+      const params = raw as { componentType?: string; value?: unknown; data?: { id?: string; children?: unknown } };
+      if (params.componentType === "yAxis") {
+        const id = labelToId?.get(String(params.value));
+        if (id) handler(id);
+        return;
+      }
+      // Treemap section (group) nodes have children; only leaves are selectable.
+      if (params.data?.id && !params.data.children) handler(params.data.id);
+    });
+  };
+}
+
+interface StackedOptions {
+  /** One bar per category (e.g. country), top to bottom. */
+  categories: string[];
+  /** One segment per series (e.g. HS section); values are shares 0..1 per category. */
+  series: { name: string; color: number; values: number[] }[];
+  format: Format;
+}
+
+/** 100% stacked horizontal bars with a 2px surface gap between segments. */
+export function stackedShareChart({ categories, series, format }: StackedOptions): OptionBuilder {
+  return (theme: ChartTheme) => {
+    const base = baseOption(theme, series.length);
+    return {
+      ...base,
+      grid: { left: 8, right: 16, top: 36, bottom: 8, containLabel: true },
+      tooltip: { ...(base.tooltip as object), trigger: "item", valueFormatter: format },
+      xAxis: { ...valueAxis(theme, (value: number) => format(value)), max: 1 },
+      yAxis: { ...categoryAxis(theme, categories, true), axisLabel: { color: theme.ink2, width: 140, overflow: "truncate" } },
+      series: series.map((item) => ({
+        type: "bar",
+        name: item.name,
+        stack: "share",
+        data: item.values,
+        barMaxWidth: 28,
+        itemStyle: { color: theme.series[item.color % theme.series.length], borderColor: theme.surface, borderWidth: 1 },
+        emphasis: { focus: "series" },
+      })),
+    };
+  };
 }

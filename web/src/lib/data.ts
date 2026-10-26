@@ -25,16 +25,11 @@ export interface WorldFile {
   sources: Table;
 }
 
+/** countries/{code}.json. Partners and chapters live in cross/{code}.parquet. */
 export interface CountryFile {
   years: Table;
-  partners: Table;
-  chapters: Table;
   products: Table;
   monthly: Table;
-}
-
-export interface PairsFile {
-  pairs: Table;
 }
 
 export interface ProductFile {
@@ -93,8 +88,25 @@ export function useJson<T>(path: string | null): Loadable<T> {
 export const useMeta = () => useJson<Meta>("meta.json");
 export const useWorld = () => useJson<WorldFile>("world.json");
 export const useCountry = (code: string | undefined) => useJson<CountryFile>(code ? `countries/${code}.json` : null);
-export const usePairs = (code: string | undefined) => useJson<PairsFile>(code ? `pairs/${code}.json` : null);
 export const useProduct = (hs4: string | undefined) => useJson<ProductFile>(hs4 ? `products/${hs4}.json` : null);
+
+/** Several country files at once (Compare page); `null` until all have loaded. */
+export function useCountries(codes: string[]): Loadable<Record<string, CountryFile>> {
+  const key = codes.join(",");
+  const [state, setState] = useState<Loadable<Record<string, CountryFile>> & { key: string }>({ data: null, error: null, key: "" });
+  useEffect(() => {
+    let active = true;
+    const list = key ? key.split(",") : [];
+    Promise.all(list.map((code) => fetchJson<CountryFile>(`countries/${code}.json`))).then(
+      (files) => active && setState({ data: Object.fromEntries(list.map((code, i) => [code, files[i]])), error: null, key }),
+      (error: Error) => active && setState({ data: null, error, key }),
+    );
+    return () => {
+      active = false;
+    };
+  }, [key]);
+  return state.key === key ? state : { data: null, error: null };
+}
 
 /** Values in the data files are US$ millions. */
 export const MILLION = 1e6;

@@ -20,7 +20,8 @@ from .paths import REFERENCE, WAREHOUSE, WEB_DATA
 MILLION = 1e6
 TOP_PARTNERS_MONTHLY = 10
 TOP_PRODUCT_TRADERS = 10
-TOP_PAIR_CHAPTERS = 10
+# Bytes for all of web/public/data. Every annual BACI refresh adds about this much to git history.
+SIZE_BUDGET = 175_000_000
 
 
 def money(column: str, alias: str | None = None) -> str:
@@ -139,26 +140,6 @@ def country(con: duckdb.DuckDBPyConnection, code: str, latest_year: int) -> dict
             """,
             p,
         ),
-        "partners": table(
-            con,
-            f"""
-            SELECT year, partner_code AS partner, {money("exports_usd")}, {money("imports_usd")}
-            FROM marts.mart_country_partner_year
-            WHERE entity_code = ? AND (exports_usd >= 500000 OR imports_usd >= 500000)
-            ORDER BY year, exports_usd + imports_usd DESC
-            """,
-            p,
-        ),
-        "chapters": table(
-            con,
-            f"""
-            SELECT year, left(hs4, 2) AS hs2, {money("sum(exports_usd)", "exports")},
-                   {money("sum(imports_usd)", "imports")}
-            FROM marts.mart_country_product_year WHERE entity_code = ?
-            GROUP BY ALL ORDER BY year, hs2
-            """,
-            p,
-        ),
         "products": table(
             con,
             f"""
@@ -181,36 +162,6 @@ def country(con: duckdb.DuckDBPyConnection, code: str, latest_year: int) -> dict
         ),
         "monthly": monthly(con, code),
     }
-
-
-def pairs(con: duckdb.DuckDBPyConnection, code: str, latest_year: int) -> dict[str, Any]:
-    """Latest-year trade with every partner by HS2 chapter, both directions. Per partner and
-    direction the top chapters are kept and the rest folded into "other" (hs2 = null)."""
-    return table(
-        con,
-        f"""
-        WITH flows AS (
-            SELECT importer_code AS partner, 'x' AS flow, hs2, value_usd
-            FROM marts.mart_pair_product_year WHERE year = ? AND exporter_code = ?
-            UNION ALL
-            SELECT exporter_code, 'm', hs2, value_usd
-            FROM marts.mart_pair_product_year WHERE year = ? AND importer_code = ?
-        ),
-        ranked AS (
-            SELECT *, row_number() OVER (PARTITION BY partner, flow ORDER BY value_usd DESC) AS r
-            FROM flows
-        ),
-        folded AS (
-            SELECT partner, flow, CASE WHEN r <= {TOP_PAIR_CHAPTERS} THEN hs2 END AS hs2,
-                   sum(value_usd) AS value_usd
-            FROM ranked GROUP BY ALL
-        )
-        SELECT partner, flow, hs2, {money("value_usd", "value")}
-        FROM folded WHERE value_usd >= 100000
-        ORDER BY partner, flow, hs2 IS NULL, value_usd DESC
-        """,
-        [latest_year, code, latest_year, code],
-    )
 
 
 def monthly(con: duckdb.DuckDBPyConnection, code: str) -> dict[str, Any]:
@@ -277,6 +228,99 @@ def product(con: duckdb.DuckDBPyConnection, hs4: str, latest_year: int) -> dict[
     }
 
 
+# ── Parquet outputs for the cross-filters (read in the browser with hyparquet) ──
+PARQUET = "FORMAT parquet, COMPRESSION snappy"
+MIN_FLOW = 1_000_000  # partner x chapter cells under $1M are dropped (<0.3% of value)
+MIN_MARGIN = 100_000  # partner totals under $100k are dropped
+
+
+def partitioned(con: duckdb.DuckDBPyConnection, sql: str, key: str, folder: Path) -> int:
+    """COPY a query partitioned by `key`, then flatten to folder/<value>.parquet."""
+    staging = folder.with_name(folder.name + "_tmp")
+    shutil.rmtree(staging, ignore_errors=True)
+    shutil.rmtree(folder, ignore_errors=True)
+    folder.parent.mkdir(parents=True, exist_ok=True)
+    con.execute(f"COPY ({sql}) TO '{staging}' ({PARQUET}, PARTITION_BY ({key}))")
+    folder.mkdir(parents=True)
+    size = 0
+    for part in staging.iterdir():
+        value = part.name.split("=", 1)[1]
+        target = folder / f"{value}.parquet"
+        files = sorted(part.glob("*.parquet"))
+        if len(files) == 1:
+            files[0].rename(target)
+        else:  # several writer threads: merge into one file
+            con.execute(
+                f"COPY (SELECT * FROM read_parquet({[str(f) for f in files]})) TO '{target}' ({PARQUET})"
+            )
+        size += target.stat().st_size
+    shutil.rmtree(staging)
+    return size
+
+
+def millions(column: str) -> str:
+    return f"round({column} / {MILLION}, 2)::FLOAT"
+
+
+def cross_filters(con: duckdb.DuckDBPyConnection) -> dict[str, int]:
+    con.execute("SET threads = 1")  # one file per partition
+    sizes = {
+        # Cells (partner x chapter, >= $1M) plus exact margins: partner totals (hs2 NULL) and
+        # chapter totals (partner NULL), so rankings and the treemap never lose small flows.
+        "cross": partitioned(
+            con,
+            f"""WITH cells AS (SELECT * FROM marts.mart_country_partner_chapter_year)
+                SELECT entity_code, year, partner_code AS partner, hs2,
+                       {millions("exports_usd")} AS exports, {millions("imports_usd")} AS imports
+                FROM cells WHERE exports_usd >= {MIN_FLOW} OR imports_usd >= {MIN_FLOW}
+                UNION ALL
+                SELECT entity_code, year, partner_code, NULL,
+                       {millions("exports_usd")}, {millions("imports_usd")}
+                FROM marts.mart_country_partner_year
+                WHERE exports_usd + imports_usd >= {MIN_MARGIN}
+                UNION ALL
+                SELECT entity_code, year, NULL, hs2,
+                       {millions("exports_usd")}, {millions("imports_usd")}
+                FROM marts.mart_country_chapter_year
+                WHERE exports_usd + imports_usd > 0
+                ORDER BY entity_code, year, partner NULLS FIRST, hs2 NULLS FIRST""",
+            "entity_code",
+            WEB_DATA / "cross",
+        ),
+        "chapters": partitioned(
+            con,
+            f"""SELECT hs2, year, entity_code AS code, {millions("exports_usd")} AS exports,
+                       {millions("imports_usd")} AS imports,
+                       round(world_market_share, 4)::FLOAT AS share
+                FROM marts.mart_country_chapter_year
+                WHERE exports_usd > 0 OR imports_usd > 0
+                ORDER BY hs2, year, code""",
+            "hs2",
+            WEB_DATA / "chapters",
+        ),
+        "routes/product": partitioned(
+            con,
+            f"""SELECT hs4, year, exporter_code AS exporter, importer_code AS importer,
+                       {millions("value_usd")} AS value
+                FROM marts.mart_route_product_year WHERE value_usd >= {MIN_FLOW}
+                ORDER BY hs4, year, exporter, value DESC""",
+            "hs4",
+            WEB_DATA / "routes" / "product",
+        ),
+        "routes/exporter": partitioned(
+            con,
+            f"""SELECT exporter_code AS exporter_key, year, importer_code AS importer, hs4,
+                       {millions("value_usd")} AS value
+                FROM marts.mart_route_product_year WHERE value_usd >= {MIN_FLOW}
+                ORDER BY exporter_key, year, importer, hs4""",
+            "exporter_key",
+            WEB_DATA / "routes" / "exporter",
+        ),
+    }
+    con.execute("RESET threads")
+    return sizes
+
+
 def refresh_monthly(con: duckdb.DuckDBPyConnection) -> None:
     """Rewrite only the IMF series inside the existing country files (the monthly CI job).
     Needs nothing but the IMF mart, so it runs without the BACI warehouse."""
@@ -308,7 +352,7 @@ def run(monthly_only: bool = False) -> None:
         ).fetchall()
     ]
     WEB_DATA.mkdir(parents=True, exist_ok=True)
-    for folder in ("countries", "pairs", "products"):
+    for folder in ("countries", "pairs", "products"):  # pairs/: removed in v2, cleaned up here
         shutil.rmtree(WEB_DATA / folder, ignore_errors=True)
     sizes: dict[str, int] = {}
     sizes["meta"] = write(
@@ -318,13 +362,16 @@ def run(monthly_only: bool = False) -> None:
     for code in codes:
         size = write(WEB_DATA / "countries" / f"{code}.json", country(con, code, latest_year))
         sizes["countries"] = sizes.get("countries", 0) + size
-        size = write(WEB_DATA / "pairs" / f"{code}.json", {"pairs": pairs(con, code, latest_year)})
-        sizes["pairs"] = sizes.get("pairs", 0) + size
     products = con.execute("SELECT DISTINCT hs4 FROM marts.mart_product_year ORDER BY 1").fetchall()
     for (hs4,) in products:
         size = write(WEB_DATA / "products" / f"{hs4}.json", product(con, hs4, latest_year))
         sizes["products"] = sizes.get("products", 0) + size
+    sizes.update(cross_filters(con))
     total = sum(sizes.values())
+    if total > SIZE_BUDGET:
+        raise SystemExit(
+            f"Web data is {total / 1e6:.0f} MB, over the {SIZE_BUDGET / 1e6:.0f} MB budget"
+        )
     print(
         "Exported "
         + ", ".join(f"{k} {v / 1e6:.1f} MB" for k, v in sizes.items())

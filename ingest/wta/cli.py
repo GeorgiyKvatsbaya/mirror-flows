@@ -15,6 +15,7 @@ def main(argv: list[str] | None = None) -> None:
     ingest.add_argument("--keep-zip", action="store_true", help="BACI: keep the downloaded zip")
 
     sub.add_parser("boundaries", help="Build web/public/data/geo/world.json")
+    sub.add_parser("lineage", help="Write web/public/data/model.json from the dbt manifest")
     sub.add_parser("baci-version", help="Print the latest BACI version and the ingested one")
     export = sub.add_parser("export", help="Write web data from the dbt marts")
     export.add_argument("--monthly-only", action="store_true", help="Only the IMF monthly series")
@@ -51,6 +52,10 @@ def main(argv: list[str] | None = None) -> None:
         manifest = REFERENCE / "baci_manifest.json"
         current = json.loads(manifest.read_text())["version"] if manifest.exists() else None
         print(json.dumps({"latest": baci.latest_version(PoliteClient()), "ingested": current}))
+    elif args.command == "lineage":
+        from . import lineage
+
+        lineage.build()
     elif args.command == "export":
         from . import export
 

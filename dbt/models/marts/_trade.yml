@@ -162,12 +162,6 @@ models:
       - name: top_importer_share
         data_type: double
 
-  - name: mart_pair_product_year
-    description: Exporter-to-importer trade by HS2 chapter and year, with the chapter's share of the pair.
-    data_tests:
-      - dbt_utils.unique_combination_of_columns:
-          arguments: {combination_of_columns: [year, exporter_code, importer_code, hs2]}
-
   - name: mart_source_comparison
     description: >
       BACI vs IMF annual exports per country on the overlap years (complete IMF years only).
@@ -179,3 +173,53 @@ models:
     columns:
       - name: imf_vs_baci
         description: IMF exports relative to BACI (0.6 = IMF is 60% higher).
+
+  - name: mart_country_partner_chapter_year
+    description: >
+      One row per country x partner x HS2 chapter x year from the country's point of view:
+      exports to and imports from the partner by chapter. Powers the Country page cross-filter
+      (click a market to see its chapters, click a chapter to see its markets).
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments: {combination_of_columns: [year, entity_code, partner_code, hs2]}
+    columns:
+      - name: entity_code
+        data_tests:
+          - relationships: {arguments: {to: ref('dim_country'), field: entity_code}}
+      - name: partner_code
+        data_tests:
+          - relationships: {arguments: {to: ref('dim_country'), field: entity_code}}
+      - name: chapter_share_of_partner
+        description: The chapter's share of the country's exports to this partner.
+        data_tests:
+          - dbt_utils.accepted_range: {arguments: {min_value: 0, max_value: 1.000001}}
+      - name: partner_share_of_chapter
+        description: The partner's share of the country's exports in this chapter.
+        data_tests:
+          - dbt_utils.accepted_range: {arguments: {min_value: 0, max_value: 1.000001}}
+
+  - name: mart_country_chapter_year
+    description: One row per country x HS2 chapter x year — exports, imports, world market share. Powers the World page chapter filter.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments: {combination_of_columns: [year, entity_code, hs2]}
+    columns:
+      - name: world_market_share
+        description: The country's share of world exports of the chapter.
+        data_tests:
+          - dbt_utils.accepted_range: {arguments: {min_value: 0, max_value: 1.000001}}
+
+  - name: mart_route_product_year
+    description: >
+      Exporter -> importer trade by HS4 heading and year since 2015 (var routes_first_year).
+      Incremental by year. Powers "where does this exporter send the product" (Product page) and
+      the HS4 drill-down inside a chapter (Pair page).
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments: {combination_of_columns: [year, exporter_code, importer_code, hs4]}
+    columns:
+      - name: exporter_code
+        data_tests:
+          - relationships: {arguments: {to: ref('dim_country'), field: entity_code}}
+      - name: value_usd
+        description: US dollars, FOB.

@@ -4,7 +4,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { chromium } from "@playwright/test";
 
 const BASE = process.env.SMOKE_URL ?? "http://localhost:4173";
-const PAGES = ["", "/countries", "/country/DEU", "/country/GEO/partner/TUR", "/products", "/product/2709", "/about"];
+const PAGES = ["", "/countries", "/country/DEU", "/country/GEO?partner=TUR", "/country/GEO/partner/TUR?hs2=87", "/products", "/product/2709?trader=SAU", "/compare", "/model?node=model.world_trade_atlas.mart_country_year", "/about"];
 const findings = [];
 const note = (area, text) => findings.push(`[${area}] ${text}`);
 
@@ -78,6 +78,55 @@ const box = await page.locator(".map").boundingBox();
 // The United States on the world map.
 await page.mouse.click(box.x + box.width * 0.2, box.y + box.height * 0.35);
 await until(async () => page.url().includes("/en/country/"), "clicking the map did not open a country", 4000);
+
+// Cross-filters: click the first bar / the biggest tile and expect the URL and titles to follow.
+const chartOf = (title) => page.locator(".chart-card", { has: page.getByRole("heading", { name: title }) }).locator(".chart");
+const clickAt = async (locator, fx, fy) => {
+  await locator.scrollIntoViewIfNeeded();
+  await page.waitForTimeout(300);
+  const box = await locator.boundingBox();
+  await page.mouse.click(box.x + box.width * fx, box.y + box.height * fy);
+};
+await page.goto(`${BASE}/en/country/GEO`, { waitUntil: "networkidle" });
+await page.waitForSelector(".chart canvas");
+await clickAt(chartOf(/^Top 15 export markets/), 0.45, 0.03);
+await until(async () => /partner=[A-Z]{3}/.test(page.url()), "clicking a market did not set ?partner=");
+await until(async () => (await page.getByRole("heading", { name: /^What it exports to / }).count()) === 1, "treemap did not switch to the selected partner");
+await page.getByRole("button", { name: /^Clear Partner/ }).click();
+await until(async () => !page.url().includes("partner="), "clearing the partner chip did not reset the filter");
+await clickAt(chartOf(/^What it exports, /), 0.2, 0.3);
+await until(async () => /hs2=\d\d/.test(page.url()), "clicking a treemap tile did not set ?hs2=");
+await until(async () => (await page.getByRole("heading", { name: /^Top 15 markets for / }).count()) === 1, "market ranking did not switch to the chapter");
+await until(async () => (await page.getByRole("heading", { name: /^Over time: / }).count()) === 1, "selection card missing");
+
+await page.goto(`${BASE}/en`, { waitUntil: "networkidle" });
+await page.waitForSelector(".chart canvas");
+await clickAt(chartOf(/^What the world trades/), 0.3, 0.3);
+await until(async () => /hs2=\d\d/.test(page.url()), "world treemap click did not set ?hs2=");
+await until(async () => (await page.getByRole("heading", { name: /^Top 15 exporters of / }).count()) === 1, "world rankings did not follow the chapter");
+
+await page.goto(`${BASE}/en/product/8703`, { waitUntil: "networkidle" });
+await page.waitForSelector(".chart canvas");
+await clickAt(chartOf(/^Top 15 exporters/), 0.45, 0.03);
+await until(async () => /trader=[A-Z]{3}/.test(page.url()), "clicking an exporter did not set ?trader=");
+await until(async () => (await page.getByRole("heading", { name: /sends it, / }).count()) === 1, "destinations card missing", 10000);
+
+await page.goto(`${BASE}/en/country/GEO/partner/TUR`, { waitUntil: "networkidle" });
+await page.waitForSelector(".chart canvas");
+await clickAt(chartOf(/^Georgia → Türkiye, \d{4}$/), 0.45, 0.06);
+await until(async () => /hs2=\d\d/.test(page.url()), "pair chapter click did not set ?hs2=");
+await until(async () => (await page.getByRole("heading", { name: /^Georgia → Türkiye: / }).count()) >= 1, "pair HS4 drill-down missing", 10000);
+
+// Search.
+await page.getByRole("combobox", { name: "Search countries and products" }).fill("georg");
+await page.keyboard.press("Enter");
+await until(async () => page.url().endsWith("/en/country/GEO"), "search did not open Georgia");
+
+// Data model: pick a node from the table.
+await page.goto(`${BASE}/en/model`, { waitUntil: "networkidle" });
+await page.getByRole("button", { name: "fct_trade_hs6", exact: true }).click();
+await until(async () => page.url().includes("node=model.world_trade_atlas.fct_trade_hs6"), "data model node selection not in URL");
+await until(async () => (await page.getByRole("heading", { name: "fct_trade_hs6", level: 2 }).count()) === 1, "node details missing");
 
 // Theme toggle.
 const before = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);

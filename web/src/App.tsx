@@ -12,6 +12,8 @@ const Pair = lazy(() => import("./pages/Pair"));
 const Products = lazy(() => import("./pages/Products"));
 const Product = lazy(() => import("./pages/Product"));
 const About = lazy(() => import("./pages/About"));
+const Compare = lazy(() => import("./pages/Compare"));
+const DataModel = lazy(() => import("./pages/DataModel"));
 
 function LanguageRoot() {
   const { lang } = useParams();
@@ -55,6 +57,8 @@ export function App() {
           <Route path="country/:code/partner/:partner" element={page(<Pair />)} />
           <Route path="products" element={page(<Products />)} />
           <Route path="product/:hs4" element={page(<Product />)} />
+          <Route path="compare" element={page(<Compare />)} />
+          <Route path="model" element={page(<DataModel />)} />
           <Route path="about" element={page(<About />)} />
           <Route path="*" element={<NotFound />} />
         </Route>

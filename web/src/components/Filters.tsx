@@ -89,3 +89,18 @@ export function SelectFilter({
     </label>
   );
 }
+
+/** Active cross-filter selections as removable chips. */
+export function FilterChips({ items }: { items: { label: string; onClear: () => void }[] }) {
+  const { t } = useI18n();
+  if (!items.length) return null;
+  return (
+    <div className="filter chips" aria-label={t("filters.selection")}>
+      {items.map((item) => (
+        <button key={item.label} type="button" className="chip" onClick={item.onClear} aria-label={t("filters.clear", { item: item.label })}>
+          {item.label} <span aria-hidden="true">×</span>
+        </button>
+      ))}
+    </div>
+  );
+}

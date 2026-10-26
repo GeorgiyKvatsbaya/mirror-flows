@@ -1,17 +1,20 @@
 import { useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ChartCard } from "../components/ChartCard";
-import { FilterBar, Segmented, SelectFilter, useParamState } from "../components/Filters";
+import { FilterBar, FilterChips, Segmented, SelectFilter, useParamState } from "../components/Filters";
 import { KpiTile } from "../components/KpiTile";
 import { MapChart } from "../components/MapChart";
 import { useI18n } from "../i18n";
-import { lineChart, rankedBarChart, sectionColor, treemapChart, type TreemapGroup } from "../lib/charts";
+import { lineChart, onItemClick, rankedBarChart, sectionColor, treemapChart, type TreemapGroup } from "../lib/charts";
 import { toRows, useWorld } from "../lib/data";
 import { useNames, type Names } from "../lib/names";
-import { CountryLink, Delta, PageState, ProductLink, useFormats, useYear, yearOptions } from "./shared";
+import { useParquet } from "../lib/parquet";
+import { CountryLink, Delta, PageState, ProductLink, useFeatureToCountry, useFormats, useYear, yearOptions } from "./shared";
 
 type CountryYear = { year: number; code: string; exports: number; imports: number; growth: number | null; share: number | null };
 type ChapterYear = { year: number; hs2: string; value: number };
+/** chapters/{hs2}.parquet: one chapter's trade by country and year. */
+type ChapterCountry = { year: number; code: string; exports: number; imports: number; share: number | null };
 type ProductRow = {
   hs4: string;
   value: number;
@@ -42,15 +45,22 @@ function WorldView({ names, countries, chapters, products }: { names: Names; cou
   const { first_year: firstYear, last_year: lastYear } = names.meta.baci;
   const [year, setYear] = useYear(lastYear);
   const [metric, setMetric] = useParamState<Metric>("metric", "exports");
+  // Cross-filter: a chapter clicked in the treemap re-scopes the map, rankings and totals.
+  const [hs2, setHs2] = useParamState("hs2", "");
+  const chapter = useParquet<ChapterCountry>(hs2 ? `chapters/${hs2}.parquet` : null);
+  const chapterName = hs2 ? names.chapter(hs2) : "";
+  const scoped = useMemo(() => (hs2 && chapter.rows ? withGrowth(chapter.rows) : countries), [hs2, chapter.rows, countries]);
 
   const totals = useMemo(() => {
     const byYear = new Map<number, number>();
-    for (const row of countries) byYear.set(row.year, (byYear.get(row.year) ?? 0) + row.exports);
+    for (const row of scoped) byYear.set(row.year, (byYear.get(row.year) ?? 0) + row.exports);
     return [...byYear].sort(([a], [b]) => a - b);
-  }, [countries]);
+  }, [scoped]);
   const total = (y: number) => totals.find(([value]) => value === y)?.[1] ?? null;
-  const yearRows = countries.filter((row) => row.year === year);
+  const yearRows = scoped.filter((row) => row.year === year);
   const worldTotal = total(year);
+  // The treemap always shows every chapter, so its shares use the unscoped world total.
+  const allTotal = useMemo(() => countries.filter((row) => row.year === year).reduce((sum, row) => sum + row.exports, 0), [countries, year]);
   const previous = total(year - 1);
   const topExporter = [...yearRows].sort((a, b) => b.exports - a.exports)[0];
   const topImporter = [...yearRows].sort((a, b) => b.imports - a.imports)[0];
@@ -58,19 +68,16 @@ function WorldView({ names, countries, chapters, products }: { names: Names; cou
   const metricFormat = metric === "growth" ? fmt.change : fmt.money;
   const mapValues = useMemo(() => {
     const values = new Map<string, number>();
-    for (const row of countries) {
+    for (const row of scoped) {
       if (row.year !== year) continue;
       const feature = names.countryInfo(row.code)?.map;
       const value = metricValue(row, metric);
       if (feature && value !== null && Number.isFinite(value)) values.set(feature, (values.get(feature) ?? 0) + value);
     }
     return values;
-  }, [countries, year, metric, names]);
-  const featureToCountry = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const country of names.countries) if (country.map && !country.historical) map.set(country.map, country.code);
-    return map;
-  }, [names]);
+  }, [scoped, year, metric, names]);
+  const featureToCountry = useFeatureToCountry(names);
+  const toggleChapter = (value: string) => setHs2(value === hs2 ? "" : value);
 
   const treemap = useMemo(() => {
     const groups = new Map<number, TreemapGroup>();
@@ -99,11 +106,12 @@ function WorldView({ names, countries, chapters, products }: { names: Names; cou
 
       <FilterBar>
         <SelectFilter label={t("filters.year")} value={String(year)} onChange={(v) => setYear(Number(v))} options={yearOptions(firstYear, lastYear)} />
+        <FilterChips items={hs2 ? [{ label: `${t("filters.chapter")}: ${chapterName}`, onClear: () => setHs2("") }] : []} />
       </FilterBar>
 
       <div className="grid kpi-grid">
         <KpiTile
-          label={t("world.kpi.total")}
+          label={hs2 ? t("world.kpi.chapterTotal", { chapter: chapterName }) : t("world.kpi.total")}
           value={fmt.money(worldTotal)}
           meta={String(year)}
           delta={
@@ -145,7 +153,11 @@ function WorldView({ names, countries, chapters, products }: { names: Names; cou
       <div className="grid cols-2">
         <ChartCard
           wide
-          title={t("world.map.title", { metric: metricLabels[metric].toLowerCase(), year })}
+          title={
+            hs2
+              ? t("world.map.titleChapter", { metric: metricLabels[metric].toLowerCase(), chapter: chapterName, year })
+              : t("world.map.title", { metric: metricLabels[metric].toLowerCase(), year })
+          }
           subtitle={t("world.map.subtitle")}
           info={t(`info.map.${metric}`)}
           controls={
@@ -175,13 +187,13 @@ function WorldView({ names, countries, chapters, products }: { names: Names; cou
             diverging={metric === "balance" || metric === "growth"}
             onSelect={(id) => {
               const code = featureToCountry.get(id);
-              if (code) navigate(path(`/country/${code}`));
+              if (code) navigate(path(`/country/${code}${hs2 ? `?hs2=${hs2}` : ""}`));
             }}
           />
         </ChartCard>
 
         <ChartCard
-          title={t("world.trend.title")}
+          title={hs2 ? t("world.trend.titleChapter", { chapter: chapterName }) : t("world.trend.title")}
           subtitle={t("world.trend.subtitle")}
           info={t("info.worldTrend")}
           build={lineChart({
@@ -201,13 +213,14 @@ function WorldView({ names, countries, chapters, products }: { names: Names; cou
 
         <ChartCard
           title={t("world.mix.title", { year })}
-          subtitle={t("world.mix.subtitle")}
+          subtitle={t("world.mix.hint")}
           info={t("info.treemap")}
-          build={treemapChart(treemap, fmt.money, worldTotal ?? 0)}
+          build={treemapChart(treemap, fmt.money, allTotal, hs2 || null)}
+          onChartReady={onItemClick(toggleChapter)}
           rows={chapters
             .filter((row) => row.year === year)
             .sort((a, b) => b.value - a.value)
-            .map((row) => ({ hs2: row.hs2, chapter: names.chapter(row.hs2), value: row.value, share: worldTotal ? row.value / worldTotal : null }))}
+            .map((row) => ({ hs2: row.hs2, chapter: names.chapter(row.hs2), value: row.value, share: allTotal ? row.value / allTotal : null }))}
           columns={[
             { key: "hs2", label: "HS" },
             { key: "chapter", label: t("col.chapter") },
@@ -218,8 +231,8 @@ function WorldView({ names, countries, chapters, products }: { names: Names; cou
           filename={`world-products-${year}`}
         />
 
-        <RankingCard names={names} rows={yearRows} field="exports" year={year} />
-        <RankingCard names={names} rows={yearRows} field="imports" year={year} />
+        <RankingCard names={names} rows={yearRows} field="exports" year={year} chapter={chapterName} />
+        <RankingCard names={names} rows={yearRows} field="imports" year={year} chapter={chapterName} />
 
         <ChartCard
           wide
@@ -252,13 +265,17 @@ function metricValue(row: CountryYear, metric: Metric): number | null {
   return row.growth;
 }
 
-function RankingCard({ names, rows, field, year }: { names: Names; rows: CountryYear[]; field: "exports" | "imports"; year: number }) {
+function RankingCard({ names, rows, field, year, chapter }: { names: Names; rows: CountryYear[]; field: "exports" | "imports"; year: number; chapter: string }) {
   const { t } = useI18n();
   const fmt = useFormats();
   const top = [...rows].sort((a, b) => b[field] - a[field]).slice(0, TOP);
   return (
     <ChartCard
-      title={t(field === "exports" ? "world.topExporters" : "world.topImporters", { n: TOP, year })}
+      title={
+        chapter
+          ? t(field === "exports" ? "world.topExportersChapter" : "world.topImportersChapter", { n: TOP, chapter, year })
+          : t(field === "exports" ? "world.topExporters" : "world.topImporters", { n: TOP, year })
+      }
       build={rankedBarChart({ items: top.map((row) => ({ label: names.country(row.code), value: row[field] })), format: fmt.money, color: field === "exports" ? 0 : 1 })}
       chartHeight={420}
       rows={top.map((row) => ({ country: names.country(row.code), value: row[field], share: row.share }))}
@@ -270,4 +287,13 @@ function RankingCard({ names, rows, field, year }: { names: Names; rows: Country
       filename={`world-top-${field}-${year}`}
     />
   );
+}
+
+/** Chapter rows -> the country-year shape used by the page, with growth vs the previous year. */
+function withGrowth(rows: ChapterCountry[]): CountryYear[] {
+  const previous = new Map(rows.map((row) => [`${row.code}:${row.year}`, row.exports]));
+  return rows.map((row) => {
+    const before = previous.get(`${row.code}:${row.year - 1}`);
+    return { ...row, growth: before ? row.exports / before - 1 : null };
+  });
 }

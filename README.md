@@ -21,7 +21,7 @@ data/raw/*.parquet  +  data/reference/*.parquet (small, committed)
         │  dbt build              (dbt/: staging → intermediate → marts, DuckDB)
         ▼
 data/warehouse.duckdb
-        │  wta export             (columnar JSON per page: meta, world, countries/, pairs/, products/)
+        │  wta export             (JSON per page + Parquet for cross-filters, model.json for lineage)
         ▼
 web/public/data  →  web/ (React + ECharts)  →  Vercel
 ```
@@ -37,13 +37,19 @@ web/public/data  →  web/ (React + ECharts)  →  Vercel
   - `fct_trade_hs6` — incremental by year (`delete+insert`); reload single years with `--vars '{baci_years: [2024]}'`.
   - `dim_country`, `dim_product`, `mart_country_year`, `mart_product_year`, `mart_trade_monthly` — with **enforced contracts**.
   - `mart_country_partner_year`, `mart_country_product_year` (Balassa RCA, world market share),
-    `mart_pair_product_year`, `mart_source_comparison` (BACI vs IMF).
+    `mart_source_comparison` (BACI vs IMF).
+  - Cross-filter marts: `mart_country_partner_chapter_year` (country × partner × HS2 × year, with
+    chapter-within-partner and partner-within-chapter shares), `mart_country_chapter_year`, and
+    `mart_route_product_year` (exporter × importer × HS4 since 2015, incremental by year).
 - **Macros**: `hhi()` (as Σv²/(Σv)², a plain aggregate), `rca()`, `safe_divide()`, `cagr()`.
 - **Tests**: grain uniqueness on every model, relationships to the dimensions, ranges; **unit
   tests** for RCA, HHI and month-over-year logic with a missing month; reconciliation tests (fact =
   staging per year, HS4 = HS6, world exports = world imports, export-weighted RCA = 1, IMF within
   ×2 of BACI with documented exceptions in `seeds/source_gap_exceptions.csv`).
 - **Exposures** for every web page, so the lineage graph runs from source to page.
+- **Data model page** (`/model` on the site): the full DAG drawn from `manifest.json` and the last
+  build's results (`wta lineage` → `model.json`) — click a node for its description, columns,
+  tests, row count and SQL.
 
 ## Run it
 
@@ -72,9 +78,24 @@ The dbt profile lives in `dbt/profiles.yml` (run dbt from `dbt/`); paths can be 
 
 ## Web data
 
-`wta export` writes ~75 MB of columnar JSON (≈20 MB gzipped): one file per country (233), per
-partner set (233) and per HS4 product (1,241), so each page downloads 20–150 KB. Money is in US$
-millions rounded to $10,000.
+`wta export` writes ~160 MB (budget 175 MB, checked on every export):
+
+- **JSON** for page skeletons — `meta.json`, `world.json`, one file per country (233) and per HS4
+  product (1,241); money in US$ millions rounded to $10,000.
+- **Parquet** (Snappy) for the cross-filters, read in the browser with
+  [hyparquet](https://github.com/hyparam/hyparquet): `cross/{country}` (partner × chapter cells
+  ≥ $1M plus exact partner and chapter totals), `chapters/{hs2}`, `routes/product/{hs4}` and
+  `routes/exporter/{country}` (HS4 routes ≥ $1M since 2015).
+
+Each page downloads 20 KB–1.6 MB. Every annual BACI refresh adds roughly the same amount to git
+history; if that grows too much, the data folder can move to object storage.
+
+## Site features
+
+World map and rankings (click a product group to re-scope them), country profiles with a
+partner ⇄ product-group cross-filter, partner-pair pages with an HS4 drill-down, product pages
+(click an exporter to see its destinations), a compare page for up to four countries, header search,
+and the Data model page.
 
 ## Notes on the data
 

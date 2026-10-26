@@ -13,6 +13,7 @@ export const SOURCE_LINKS: Record<SourceKey, { name: string; url: string }> = {
 export function SourceNote({ sources }: { sources: SourceKey[] }) {
   const { lang, t } = useI18n();
   const { data: meta } = useMeta();
+  if (!sources.length) return <span />;
   return (
     <p className="source-note">
       {t("common.source")}:{" "}

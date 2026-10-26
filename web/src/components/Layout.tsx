@@ -5,12 +5,15 @@ import { useMeta } from "../lib/data";
 import { formatDate } from "../lib/format";
 import { setTheme, useTheme } from "../lib/theme";
 import { ErrorBoundary } from "./ErrorBoundary";
+import { Search } from "./Search";
 import { SOURCE_LINKS } from "./SourceNote";
 
 const NAV: { path: string; key: MessageKey }[] = [
   { path: "", key: "nav.world" },
   { path: "countries", key: "nav.countries" },
   { path: "products", key: "nav.products" },
+  { path: "compare", key: "nav.compare" },
+  { path: "model", key: "nav.model" },
   { path: "about", key: "nav.about" },
 ];
 
@@ -86,6 +89,7 @@ export function Layout() {
               <span>{t("site.name")}</span>
             </Link>
             <div className="header-tools">
+              <Search />
               <LanguageSwitch />
               <ThemeToggle />
             </div>

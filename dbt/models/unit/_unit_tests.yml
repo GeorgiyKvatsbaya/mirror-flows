@@ -62,3 +62,21 @@ unit_tests:
         - {month: "2024-03-01", exports_12m_usd: 150, exports_yoy: null, imports_yoy: null}
         - {month: "2025-01-01", exports_12m_usd: 200, exports_yoy: 0.5, imports_yoy: 0.0}
         - {month: "2025-03-01", exports_12m_usd: 250, exports_yoy: 1.0, imports_yoy: 1.0}
+
+  - name: partner_chapter_shares
+    description: Chapter share within a partner and partner share within a chapter, both directions.
+    model: mart_country_partner_chapter_year
+    given:
+      - input: ref('int_pair_hs2_yearly')
+        rows:
+          - {year: 2024, exporter_code: AAA, importer_code: BBB, hs2: "87", value_usd: 75}
+          - {year: 2024, exporter_code: AAA, importer_code: BBB, hs2: "08", value_usd: 25}
+          - {year: 2024, exporter_code: AAA, importer_code: CCC, hs2: "87", value_usd: 25}
+    expect:
+      rows:
+        - {entity_code: AAA, partner_code: BBB, hs2: "87", exports_usd: 75, imports_usd: 0, chapter_share_of_partner: 0.75, partner_share_of_chapter: 0.75}
+        - {entity_code: AAA, partner_code: BBB, hs2: "08", exports_usd: 25, imports_usd: 0, chapter_share_of_partner: 0.25, partner_share_of_chapter: 1.0}
+        - {entity_code: AAA, partner_code: CCC, hs2: "87", exports_usd: 25, imports_usd: 0, chapter_share_of_partner: 1.0, partner_share_of_chapter: 0.25}
+        - {entity_code: BBB, partner_code: AAA, hs2: "87", exports_usd: 0, imports_usd: 75, chapter_share_of_partner: null, partner_share_of_chapter: null}
+        - {entity_code: BBB, partner_code: AAA, hs2: "08", exports_usd: 0, imports_usd: 25, chapter_share_of_partner: null, partner_share_of_chapter: null}
+        - {entity_code: CCC, partner_code: AAA, hs2: "87", exports_usd: 0, imports_usd: 25, chapter_share_of_partner: null, partner_share_of_chapter: null}

@@ -1,4 +1,4 @@
-import { useCallback, type ReactNode } from "react";
+import { useCallback, useMemo, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useParamState } from "../components/Filters";
 import { useI18n } from "../i18n";
@@ -56,4 +56,13 @@ export function Delta({ value, format }: { value: unknown; format: Format }) {
   if (value === null || value === undefined) return <>—</>;
   const number = Number(value);
   return <span className={number > 0 ? "delta-up" : number < 0 ? "delta-down" : undefined}>{format(number)}</span>;
+}
+
+/** Natural Earth feature id -> current country entity (historical entities share a feature). */
+export function useFeatureToCountry(names: Names) {
+  return useMemo(() => {
+    const map = new Map<string, string>();
+    for (const country of names.countries) if (country.map && !country.historical) map.set(country.map, country.code);
+    return map;
+  }, [names]);
 }

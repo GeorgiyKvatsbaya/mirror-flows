@@ -14,8 +14,9 @@ ingest:           ## All sources (BACI skips when the release is already ingeste
 	uv run wta ingest worldbank
 	uv run wta ingest hs
 
-build:            ## Seeds, models and tests
+build:            ## Seeds, models and tests (results kept for the Data model page)
 	$(DBT) build
+	cp dbt/target/run_results.json dbt/target/build_results.json
 
 test:             ## Python tests, dbt unit tests, sqlfluff
 	uv run pytest
@@ -25,8 +26,9 @@ test:             ## Python tests, dbt unit tests, sqlfluff
 export:           ## Marts -> web/public/data
 	uv run wta export
 
-docs:             ## Static dbt docs -> web/public/dbt (local paths stripped)
+docs:             ## Static dbt docs -> web/public/dbt and model.json (local paths stripped)
 	$(DBT) docs generate --static
+	uv run wta lineage
 	mkdir -p web/public/dbt
 	uv run python -c "import pathlib,sys; root=str(pathlib.Path('dbt').resolve()); \
 	  s=pathlib.Path('dbt/target/static_index.html').read_text(); \
