@@ -12,15 +12,19 @@
   )
 }}
 
+{#- Year filter as one expression, so the rendered SQL has the same shape in every mode. -#}
+{%- set first_year = var('routes_first_year', 2015) -%}
+{%- if var('baci_years', none) -%}
+    {%- set year_filter = 'year in (' ~ (var('baci_years') | join(', ')) ~ ') and year >= ' ~ first_year -%}
+{%- elif is_incremental() -%}
+    {%- set year_filter = 'year > (select max(year) from ' ~ this ~ ')' -%}
+{%- else -%}
+    {%- set year_filter = 'year >= ' ~ first_year -%}
+{%- endif %}
+
 with flows as (
     select * from {{ ref('fct_trade_hs6') }}
-    {% if var('baci_years', none) %}
-    where year in ({{ var('baci_years') | join(', ') }}) and year >= {{ var('routes_first_year', 2015) }}
-    {% elif is_incremental() %}
-    where year > (select max(year) from {{ this }})
-    {% else %}
-    where year >= {{ var('routes_first_year', 2015) }}
-    {% endif %}
+    where {{ year_filter }}
 )
 
 select
