@@ -15,8 +15,9 @@ type PairRow = { partner: string; flow: "x" | "m"; hs2: string | null; value: nu
 export default function Pair() {
   const { code = "", partner = "" } = useParams();
   const names = useNames();
-  const country = useCountry(code);
-  const pairs = usePairs(code);
+  const valid = Boolean(names?.countryInfo(code) && names.countryInfo(partner) && code !== partner);
+  const country = useCountry(valid ? code : undefined);
+  const pairs = usePairs(valid ? code : undefined);
   if (names && (!names.countryInfo(code) || !names.countryInfo(partner) || code === partner)) return <NotFound />;
   const error = country.error ?? pairs.error;
   if (error) return <PageState error={error} />;

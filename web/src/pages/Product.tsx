@@ -23,7 +23,7 @@ const LEADERS = 6;
 export default function Product() {
   const { hs4 = "" } = useParams();
   const names = useNames();
-  const { data, error } = useProduct(hs4);
+  const { data, error } = useProduct(names?.products.some((p) => p.code === hs4) ? hs4 : undefined);
   if (names && !names.products.some((p) => p.code === hs4)) return <NotFound />;
   if (error) return <PageState error={error} />;
   if (!names || !data) return <PageState />;

@@ -42,7 +42,8 @@ const TOP = 15;
 export default function Country() {
   const { code = "" } = useParams();
   const names = useNames();
-  const { data, error } = useCountry(code);
+  // Fetch only known codes: an unknown one would 404 before the Not Found page renders.
+  const { data, error } = useCountry(names?.countryInfo(code) ? code : undefined);
   if (names && !names.countryInfo(code)) return <NotFound />;
   if (error) return <PageState error={error} />;
   if (!names || !data) return <PageState />;

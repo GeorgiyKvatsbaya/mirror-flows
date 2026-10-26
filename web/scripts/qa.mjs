@@ -1,5 +1,5 @@
 // QA pass: accessibility (axe), layout overflow on desktop and phone, light and dark, and the
-// main interactions. Usage: SMOKE_URL=https://worldtradeatlas.vercel.app node scripts/qa.mjs
+// main interactions. Usage: SMOKE_URL=https://world-trade-atlas-one.vercel.app node scripts/qa.mjs
 import AxeBuilder from "@axe-core/playwright";
 import { chromium } from "@playwright/test";
 

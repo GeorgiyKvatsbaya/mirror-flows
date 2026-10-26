@@ -3,7 +3,7 @@
 **Who trades what with whom** — goods trade between 200+ economies since 1995, by product, with
 monthly updates. A dbt + DuckDB analytics project with a static EN/RU web app on top.
 
-**Live:** https://worldtradeatlas.vercel.app · **dbt docs & lineage:** https://worldtradeatlas.vercel.app/dbt/
+**Live:** https://world-trade-atlas-one.vercel.app · **dbt docs & lineage:** https://world-trade-atlas-one.vercel.app/dbt/
 
 | | |
 |---|---|
