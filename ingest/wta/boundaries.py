@@ -46,7 +46,9 @@ def build() -> None:
         code = props["ADM0_A3"]
         if code in DROP:
             continue
-        geometry = polygonal(set_precision(polygonal(make_valid(shape(item["geometry"]))), PRECISION))
+        geometry = polygonal(
+            set_precision(polygonal(make_valid(shape(item["geometry"]))), PRECISION)
+        )
         features.append(
             {
                 "type": "Feature",

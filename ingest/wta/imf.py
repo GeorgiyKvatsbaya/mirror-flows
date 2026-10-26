@@ -33,8 +33,11 @@ def reporters() -> list[str]:
         f"SELECT iso3 FROM '{REFERENCE / 'wb_countries.parquet'}' WHERE NOT is_aggregate",
         f"SELECT country_iso3 FROM '{REFERENCE / 'baci_countries.parquet'}'",
     ]
-    present = [sql for sql, name in zip(sources, ("wb", "baci"), strict=True)
-               if (REFERENCE / f"{name}_countries.parquet").exists()]
+    present = [
+        sql
+        for sql, name in zip(sources, ("wb", "baci"), strict=True)
+        if (REFERENCE / f"{name}_countries.parquet").exists()
+    ]
     if not present:
         raise SystemExit("Run `wta ingest worldbank` (or baci) first")
     rows = duckdb.sql(

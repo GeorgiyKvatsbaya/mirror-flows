@@ -1,0 +1,24 @@
+[sqlfluff]
+templater = dbt
+dialect = duckdb
+max_line_length = 110
+# Layout is reviewed by eye; keep lint on correctness and consistency.
+exclude_rules = layout.long_lines, structure.column_order, ambiguous.column_count, references.qualification, references.keywords
+
+[sqlfluff:templater:dbt]
+project_dir = .
+profiles_dir = .
+profile = world_trade_atlas
+target = dev
+
+[sqlfluff:rules:capitalisation.keywords]
+capitalisation_policy = lower
+
+[sqlfluff:rules:capitalisation.functions]
+extended_capitalisation_policy = lower
+
+[sqlfluff:rules:capitalisation.literals]
+capitalisation_policy = lower
+
+[sqlfluff:rules:aliasing.length]
+min_alias_length = 2

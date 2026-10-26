@@ -5,11 +5,20 @@ with pairs as (
 ),
 
 both_directions as (
-    select year, exporter_code as entity_code, importer_code as partner_code,
-           value_usd as exports_usd, 0 as imports_usd
+    select
+        year,
+        exporter_code as entity_code,
+        importer_code as partner_code,
+        value_usd as exports_usd,
+        0 as imports_usd
     from pairs
     union all
-    select year, importer_code, exporter_code, 0, value_usd
+    select
+        year,
+        importer_code as entity_code,
+        exporter_code as partner_code,
+        0 as exports_usd,
+        value_usd as imports_usd
     from pairs
 ),
 

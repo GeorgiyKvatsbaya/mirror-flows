@@ -13,7 +13,10 @@ world as (
 ),
 
 country_totals as (
-    select year, entity_code, sum(value_usd) as exports_total_usd
+    select
+        year,
+        entity_code,
+        sum(value_usd) as exports_total_usd
     from exports
     group by all
 ),
@@ -27,9 +30,10 @@ combined as (
         coalesce(imports.value_usd, 0) as imports_usd
     from exports
     full outer join imports
-        on exports.year = imports.year
-        and exports.entity_code = imports.entity_code
-        and exports.hs4 = imports.hs4
+        on
+            exports.year = imports.year
+            and exports.entity_code = imports.entity_code
+            and exports.hs4 = imports.hs4
 ),
 
 final as (
@@ -46,8 +50,9 @@ final as (
                'world.world_product_usd', 'world.world_total_usd') }} as rca
     from combined
     left join country_totals
-        on combined.year = country_totals.year
-        and combined.entity_code = country_totals.entity_code
+        on
+            combined.year = country_totals.year
+            and combined.entity_code = country_totals.entity_code
     left join world on combined.year = world.year and combined.hs4 = world.hs4
 )
 

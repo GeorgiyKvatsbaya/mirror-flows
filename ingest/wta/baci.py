@@ -85,7 +85,9 @@ COUNTRIES_SQL = """
            nullif(trim(country_iso3), 'N/A') AS country_iso3
     FROM {src}
 """
-PRODUCTS_SQL = "SELECT lpad(trim(code), 6, '0') AS code, trim(description) AS description FROM {src}"
+PRODUCTS_SQL = (
+    "SELECT lpad(trim(code), 6, '0') AS code, trim(description) AS description FROM {src}"
+)
 
 
 def repair_mojibake(text: str | None) -> str | None:

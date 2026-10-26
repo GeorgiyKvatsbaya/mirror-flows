@@ -6,14 +6,24 @@ with products as (
 ),
 
 countries as (
-    select year, entity_code, exports_usd from {{ ref('mart_country_year') }}
+    select
+        year,
+        entity_code,
+        exports_usd
+    from {{ ref('mart_country_year') }}
 ),
 
 world as (
-    select distinct year, world_total_usd from {{ ref('int_world_hs4_yearly') }}
+    select distinct
+        year,
+        world_total_usd
+    from {{ ref('int_world_hs4_yearly') }}
 )
 
-select products.year, products.hs4, sum(countries.exports_usd / world.world_total_usd * products.rca) as weighted_rca
+select
+    products.year,
+    products.hs4,
+    sum(countries.exports_usd / world.world_total_usd * products.rca) as weighted_rca
 from products
 inner join countries on products.year = countries.year and products.entity_code = countries.entity_code
 inner join world on products.year = world.year

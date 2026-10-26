@@ -18,12 +18,15 @@ with flows as (
     {% if var('baci_years', none) %}
     where year in ({{ var('baci_years') | join(', ') }})
     {% elif is_incremental() %}
-    where year > (select max(year) from {{ this }})
+        where year > (select max(year) from {{ this }})
     {% endif %}
 ),
 
 entities as (
-    select baci_code, entity_code from {{ ref('int_country_entities') }}
+    select
+        baci_code,
+        entity_code
+    from {{ ref('int_country_entities') }}
 ),
 
 final as (

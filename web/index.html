@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Who trades what with whom: goods trade between 200+ countries since 1995, by product, with monthly updates. Built on CEPII BACI and IMF data with dbt + DuckDB." />
+    <meta name="theme-color" content="#f8f3ea" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#14120f" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <title>World Trade Atlas</title>
+    <script>
+      // Apply a stored theme before first paint to avoid a light/dark flash.
+      try {
+        var stored = localStorage.getItem("wta-theme");
+        if (stored === "light" || stored === "dark") document.documentElement.dataset.theme = stored;
+      } catch (e) {}
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

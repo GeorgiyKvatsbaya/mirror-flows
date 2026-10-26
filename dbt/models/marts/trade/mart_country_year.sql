@@ -95,9 +95,9 @@ final as (
         (exports_usd - imports_usd)::double as balance_usd,
         (exports_usd + imports_usd)::double as trade_usd,
         {{ safe_divide('exports_usd', 'lag(exports_usd) over (partition by entity_code order by year)') }}
-            - 1 as exports_growth,
+        - 1 as exports_growth,
         {{ safe_divide('imports_usd', 'lag(imports_usd) over (partition by entity_code order by year)') }}
-            - 1 as imports_growth,
+        - 1 as imports_growth,
         {{ safe_divide('exports_usd', 'sum(exports_usd) over (partition by year)') }}::double
             as world_export_share,
         export_partner_count::integer as export_partner_count,

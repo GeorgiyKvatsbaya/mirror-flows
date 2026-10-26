@@ -3,8 +3,9 @@
 -- to country entities. 'WLD' holds the reporter's total with the world (IMF G001).
 with monthly as (
     select * from {{ ref('stg_imf__trade_monthly') }}
-    where month >= '{{ var("imf_first_month") }}'::date
-      and (is_world_total or is_partner_country)
+    where
+        month >= '{{ var("imf_first_month") }}'::date
+        and (is_world_total or is_partner_country)
 ),
 
 entities as (

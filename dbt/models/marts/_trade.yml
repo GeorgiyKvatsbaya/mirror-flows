@@ -167,3 +167,15 @@ models:
     data_tests:
       - dbt_utils.unique_combination_of_columns:
           arguments: {combination_of_columns: [year, exporter_code, importer_code, hs2]}
+
+  - name: mart_source_comparison
+    description: >
+      BACI vs IMF annual exports per country on the overlap years (complete IMF years only).
+      Differences are expected — {{ doc('mirror_flows') }} Re-export hubs report goods in transit
+      as their own exports; BACI attributes them to the producing country.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments: {combination_of_columns: [year, entity_code]}
+    columns:
+      - name: imf_vs_baci
+        description: IMF exports relative to BACI (0.6 = IMF is 60% higher).

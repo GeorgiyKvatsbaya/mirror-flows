@@ -41,9 +41,11 @@ final as (
         world.world_product_usd::double as world_usd,
         {{ safe_divide('world.world_product_usd', 'world.world_total_usd') }}::double
             as world_share,
-        ({{ safe_divide('world.world_product_usd',
+        (
+            {{ safe_divide('world.world_product_usd',
             'lag(world.world_product_usd) over (partition by world.hs4 order by world.year)') }}
-            - 1)::double as growth,
+            - 1
+        )::double as growth,
         world.exporter_count::integer as exporter_count,
         exporter_stats.exporter_hhi::double as exporter_hhi,
         exporter_stats.top_exporter::varchar as top_exporter,
